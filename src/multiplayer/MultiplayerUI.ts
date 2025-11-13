@@ -129,18 +129,20 @@ export class MultiplayerUI {
 
       Logger.info('MultiplayerUI', '구슬 이름 배열 생성', { names });
 
-      // ⚠️ 수정: 먼저 구슬 설정, 그 다음 맵 설정
-      // 1. 랜덤 시드를 setMarbles 이전에 설정
+      // ⚠️ FIX: setMap이 내부에서 setMarbles를 다시 호출하는 문제 해결
+      // 1. 랜덤 시드를 먼저 설정
       if (config.randomSeed) {
         (window as any).roulette.setRandomSeed(config.randomSeed);
-        Logger.info('MultiplayerUI', '랜덤 시드 설정 호출 (setMarbles 이전)', { randomSeed: config.randomSeed });
+        Logger.info('MultiplayerUI', '랜덤 시드 설정', { randomSeed: config.randomSeed });
       }
 
-      // 2. 참가자 이름으로 구슬 설정 (randomSeed 적용됨)
-      (window as any).roulette.setMarbles(names);
+      // 2. 맵을 먼저 설정 (맵이 설정되지 않으면 구슬이 생성되지 않음)
+      (window as any).roulette.setMapOnly(config.mapIndex);
+      Logger.info('MultiplayerUI', '맵 설정 완료', { mapIndex: config.mapIndex });
 
-      // 3. 맵 설정 (setMap이 내부에서 setMarbles를 호출하므로 구슬이 이미 설정되어 있어야 함)
-      (window as any).roulette.setMap(config.mapIndex);
+      // 3. 구슬 설정 (randomSeed가 유지된 상태로 설정됨)
+      (window as any).roulette.setMarbles(names);
+      Logger.info('MultiplayerUI', '구슬 설정 완료', { count: names.length });
 
       // 당첨 순위 설정
       (window as any).options.winningRank = config.winnerRank;
@@ -195,51 +197,29 @@ export class MultiplayerUI {
   }
 
   /**
-   * 방 생성 모달 표시
+   * 방 생성 모달 표시 (이름 입력 제거 - 자동으로 "호스트"로 설정)
    */
   private showCreateRoomModal(): void {
-    const modal = document.getElementById('mp-modal');
-    const title = document.getElementById('mp-modal-title');
-    const content = document.getElementById('mp-modal-content');
+    // 이름 입력 없이 바로 방 생성
+    this.createRoomDirectly();
+  }
 
-    if (!modal || !title || !content) return;
+  /**
+   * 방 생성 (이름 입력 없이 바로 생성)
+   */
+  private async createRoomDirectly(): Promise<void> {
+    const playerName = '호스트'; // 기본 이름
 
-    title.textContent = '방 만들기';
-    content.innerHTML = `
-      <div class="mp-modal-form">
-        <label>
-          이름:
-          <input type="text" id="mp-player-name" placeholder="이름을 입력하세요" maxlength="20" />
-        </label>
-        <button id="mp-create-btn" class="mp-btn-primary">방 만들기</button>
-        <button id="mp-cancel-btn" class="mp-btn-secondary">취소</button>
-      </div>
-    `;
-
-    modal.style.display = 'flex';
-
-    // 버튼 이벤트
-    document.getElementById('mp-create-btn')?.addEventListener('click', async () => {
-      const nameInput = document.getElementById('mp-player-name') as HTMLInputElement;
-      const playerName = nameInput?.value.trim();
-
-      if (!playerName) {
-        alert('이름을 입력해주세요.');
-        return;
-      }
-
-      try {
-        const roomId = await this.roomManager.createRoom(playerName);
-        this.onRoomCreated(roomId);
-        modal.style.display = 'none';
-      } catch (error) {
-        alert('방 생성 실패: ' + (error as Error).message);
-      }
-    });
-
-    document.getElementById('mp-cancel-btn')?.addEventListener('click', () => {
-      modal.style.display = 'none';
-    });
+    try {
+      const roomId = await this.roomManager.createRoom(playerName);
+      this.onRoomCreated(roomId);
+    } catch (error) {
+      this.showErrorUI(
+        '방 생성 실패',
+        (error as Error).message,
+        () => this.createRoomDirectly() // 재시도
+      );
+    }
   }
 
   /**
@@ -418,7 +398,7 @@ export class MultiplayerUI {
     if (copyBtn) {
       copyBtn.onclick = () => {
         navigator.clipboard.writeText(roomId);
-        alert('방 코드가 복사되었습니다!');
+        this.showToast('방 코드가 복사되었습니다!');
       };
     }
 
@@ -716,6 +696,74 @@ export class MultiplayerUI {
     document.getElementById('mp-download-logs-btn')?.addEventListener('click', () => {
       Logger.downloadLogs();
     });
+  }
+
+  /**
+   * 토스트 메시지 표시
+   * @param message 표시할 메시지
+   * @param duration 표시 시간 (ms, 기본 2000ms)
+   */
+  private showToast(message: string, duration: number = 2000): void {
+    // 기존 토스트가 있으면 제거
+    const existingToast = document.getElementById('mp-toast');
+    if (existingToast) {
+      existingToast.remove();
+    }
+
+    // 토스트 엘리먼트 생성
+    const toast = document.createElement('div');
+    toast.id = 'mp-toast';
+    toast.textContent = message;
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 10000;
+      animation: mp-toast-fadein 0.3s ease-in-out;
+    `;
+
+    // 애니메이션 스타일 추가
+    if (!document.getElementById('mp-toast-style')) {
+      const style = document.createElement('style');
+      style.id = 'mp-toast-style';
+      style.textContent = `
+        @keyframes mp-toast-fadein {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
+        @keyframes mp-toast-fadeout {
+          from {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+          to {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    document.body.appendChild(toast);
+
+    // 지정된 시간 후 페이드아웃 후 제거
+    setTimeout(() => {
+      toast.style.animation = 'mp-toast-fadeout 0.3s ease-in-out';
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
   }
 
   // Getter 메서드들

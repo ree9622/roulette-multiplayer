@@ -438,6 +438,12 @@ export class Roulette extends EventTarget {
       totalCount,
     });
 
+    // 물리 엔진에도 같은 랜덤 함수 적용 (동기화 보장)
+    if (this.physics && 'setRandomFunc' in this.physics) {
+      (this.physics as any).setRandomFunc(randomFunc);
+      Logger.info('Roulette', '물리 엔진에 랜덤 함수 설정 완료');
+    }
+
     const orders = Array(totalCount)
       .fill(0)
       .map((_, i) => i)
@@ -459,6 +465,7 @@ export class Roulette extends EventTarget {
               totalCount,
               member.name,
               member.weight,
+              randomFunc, // 동일한 랜덤 함수 전달 (동기화 보장)
             ),
           );
         }
@@ -477,6 +484,7 @@ export class Roulette extends EventTarget {
     this._clearMap();
     this._loadMap();
     this._goalDist = Infinity;
+    // 주의: randomSeed는 유지됨 (멀티플레이어 동기화를 위해)
   }
 
   public getCount() {
@@ -505,6 +513,23 @@ export class Roulette extends EventTarget {
     });
   }
 
+  /**
+   * 맵만 변경 (구슬 재생성 없이)
+   * @param index 맵 인덱스
+   */
+  public setMapOnly(index: number) {
+    if (index < 0 || index > stages.length - 1) {
+      throw new Error('Incorrect map number');
+    }
+    this._stage = stages[index];
+    this.reset(); // 맵과 물리엔진만 초기화 (randomSeed는 유지)
+    this._camera.initializePosition();
+  }
+
+  /**
+   * 맵 변경 (기존 구슬 유지하면서 맵만 변경)
+   * @param index 맵 인덱스
+   */
   public setMap(index: number) {
     if (index < 0 || index > stages.length - 1) {
       throw new Error('Incorrect map number');

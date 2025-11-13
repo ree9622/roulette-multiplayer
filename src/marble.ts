@@ -21,6 +21,7 @@ export class Marble {
   private _maxCoolTime = 5000;
   private _stuckTime = 0;
   private lastPosition: VectorLike = { x: 0, y: 0 };
+  private _randomFunc: () => number; // 시드 기반 랜덤 함수 (동기화용)
 
   private physics: IPhysics;
 
@@ -56,13 +57,15 @@ export class Marble {
     max: number,
     name?: string,
     weight: number = 1,
+    randomFunc: () => number = Math.random, // 시드 기반 랜덤 함수 전달 (기본값: Math.random)
   ) {
     this.name = name || `M${order}`;
     this.weight = weight;
     this.physics = physics;
+    this._randomFunc = randomFunc; // 랜덤 함수 저장 (스킬 발동에도 사용)
 
     this._maxCoolTime = 1000 + (1 - this.weight) * 4000;
-    this._coolTime = this._maxCoolTime * Math.random();
+    this._coolTime = this._maxCoolTime * randomFunc(); // 전달된 랜덤 함수 사용
     this._skillRate = 0.2 * this.weight;
 
     const maxLine = Math.ceil(max / 10);
@@ -111,8 +114,9 @@ export class Marble {
     }
 
     if (this._coolTime <= 0) {
+      // 시드 기반 랜덤 함수 사용 (멀티플레이어 동기화)
       this.skill =
-        Math.random() < this._skillRate ? Skills.Impact : Skills.None;
+        this._randomFunc() < this._skillRate ? Skills.Impact : Skills.None;
       this._coolTime = this._maxCoolTime;
     }
   }

@@ -12,6 +12,7 @@ export class Box2dPhysics implements IPhysics {
   private entities: ({ body: Box2D.b2Body } & MapEntityState)[] = [];
 
   private deleteCandidates: Box2D.b2Body[] = [];
+  private randomFunc: () => number = Math.random; // 시드 기반 랜덤 함수 (동기화용)
 
   async init(): Promise<void> {
     this.Box2D = await Box2DFactory();
@@ -117,7 +118,8 @@ export class Box2dPhysics implements IPhysics {
     bodyDef.set_position(new this.Box2D.b2Vec2(x, y));
 
     const body = this.world.CreateBody(bodyDef);
-    body.CreateFixture(circleShape, 1 + Math.random());
+    // 시드 기반 랜덤 사용 (멀티플레이어 동기화)
+    body.CreateFixture(circleShape, 1 + this.randomFunc());
     body.SetAwake(false);
     body.SetEnabled(false);
     this.marbleMap[id] = body;
@@ -126,8 +128,9 @@ export class Box2dPhysics implements IPhysics {
   shakeMarble(id: number): void {
     const body = this.marbleMap[id];
     if (body) {
+      // 시드 기반 랜덤 사용 (멀티플레이어 동기화)
       body.ApplyLinearImpulseToCenter(
-        new this.Box2D.b2Vec2(Math.random() * 10 - 5, Math.random() * 10 - 5),
+        new this.Box2D.b2Vec2(this.randomFunc() * 10 - 5, this.randomFunc() * 10 - 5),
         true,
       );
     }
@@ -209,5 +212,13 @@ export class Box2dPhysics implements IPhysics {
         }
       }
     }
+  }
+
+  /**
+   * 랜덤 함수 설정 (멀티플레이어 동기화용)
+   * @param randomFunc 시드 기반 랜덤 함수
+   */
+  setRandomFunc(randomFunc: () => number): void {
+    this.randomFunc = randomFunc;
   }
 }
