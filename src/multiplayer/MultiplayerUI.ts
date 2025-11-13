@@ -129,17 +129,18 @@ export class MultiplayerUI {
 
       Logger.info('MultiplayerUI', '구슬 이름 배열 생성', { names });
 
-      // 맵 설정 (먼저! setMap이 내부에서 setMarbles를 호출함)
-      (window as any).roulette.setMap(config.mapIndex);
-
-      // ⚠️ 중요: 랜덤 시드를 setMarbles 이전에 설정해야 함!
+      // ⚠️ 수정: 먼저 구슬 설정, 그 다음 맵 설정
+      // 1. 랜덤 시드를 setMarbles 이전에 설정
       if (config.randomSeed) {
         (window as any).roulette.setRandomSeed(config.randomSeed);
         Logger.info('MultiplayerUI', '랜덤 시드 설정 호출 (setMarbles 이전)', { randomSeed: config.randomSeed });
       }
 
-      // 구슬 설정 (이제 randomSeed가 적용됨)
+      // 2. 참가자 이름으로 구슬 설정 (randomSeed 적용됨)
       (window as any).roulette.setMarbles(names);
+
+      // 3. 맵 설정 (setMap이 내부에서 setMarbles를 호출하므로 구슬이 이미 설정되어 있어야 함)
+      (window as any).roulette.setMap(config.mapIndex);
 
       // 당첨 순위 설정
       (window as any).options.winningRank = config.winnerRank;
