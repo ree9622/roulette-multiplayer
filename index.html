@@ -183,8 +183,9 @@
             return;
           }
 
-          // 게임 설정 수집
-          const names = getNames();
+          // 게임 설정 수집 - 참가자 이름들을 구슬로 사용
+          const players = roomManager.getPlayers();
+          const names = players.map(player => player.name);
           const mapIndex = parseInt(document.querySelector('#sltMap').value);
           const winnerRank = window.options.winningRank;
 
