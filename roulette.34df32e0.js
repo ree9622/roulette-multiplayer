@@ -1166,6 +1166,11 @@ class Roulette extends EventTarget {
             randomSeed: this._randomSeed,
             totalCount
         });
+        // 물리 엔진에도 같은 랜덤 함수 적용 (동기화 보장)
+        if (this.physics && 'setRandomFunc' in this.physics) {
+            this.physics.setRandomFunc(randomFunc);
+            (0, _logger.Logger).info('Roulette', "\uBB3C\uB9AC \uC5D4\uC9C4\uC5D0 \uB79C\uB364 \uD568\uC218 \uC124\uC815 \uC644\uB8CC");
+        }
         const orders = Array(totalCount).fill(0).map((_, i)=>i).sort(()=>randomFunc() - 0.5);
         (0, _logger.Logger).info('Roulette', "setMarbles - \uAD6C\uC2AC \uC21C\uC11C \uC0DD\uC131 \uC644\uB8CC", {
             orders: [
@@ -1176,7 +1181,7 @@ class Roulette extends EventTarget {
         members.forEach((member)=>{
             if (member) for(let j = 0; j < member.count; j++){
                 const order = orders.pop() || 0;
-                this._marbles.push(new (0, _marble.Marble)(this.physics, order, totalCount, member.name, member.weight));
+                this._marbles.push(new (0, _marble.Marble)(this.physics, order, totalCount, member.name, member.weight, randomFunc));
             }
         });
         this._totalMarbleCount = totalCount;
@@ -1190,6 +1195,7 @@ class Roulette extends EventTarget {
         this._clearMap();
         this._loadMap();
         this._goalDist = Infinity;
+    // 주의: randomSeed는 유지됨 (멀티플레이어 동기화를 위해)
     }
     getCount() {
         return this._marbles.length;
@@ -1213,7 +1219,19 @@ class Roulette extends EventTarget {
             };
         });
     }
-    setMap(index) {
+    /**
+   * 맵만 변경 (구슬 재생성 없이)
+   * @param index 맵 인덱스
+   */ setMapOnly(index) {
+        if (index < 0 || index > (0, _maps.stages).length - 1) throw new Error('Incorrect map number');
+        this._stage = (0, _maps.stages)[index];
+        this.reset(); // 맵과 물리엔진만 초기화 (randomSeed는 유지)
+        this._camera.initializePosition();
+    }
+    /**
+   * 맵 변경 (기존 구슬 유지하면서 맵만 변경)
+   * @param index 맵 인덱스
+   */ setMap(index) {
         if (index < 0 || index > (0, _maps.stages).length - 1) throw new Error('Incorrect map number');
         const names = this._marbles.map((marble)=>marble.name);
         this._stage = (0, _maps.stages)[index];
@@ -1839,7 +1857,7 @@ class Marble {
     get angle() {
         return this.position.angle;
     }
-    constructor(physics, order, max, name, weight = 1){
+    constructor(physics, order, max, name, weight = 1, randomFunc = Math.random){
         this.type = 'marble';
         this.name = '';
         this.size = 0.5;
@@ -1860,8 +1878,9 @@ class Marble {
         this.name = name || `M${order}`;
         this.weight = weight;
         this.physics = physics;
+        this._randomFunc = randomFunc; // 랜덤 함수 저장 (스킬 발동에도 사용)
         this._maxCoolTime = 1000 + (1 - this.weight) * 4000;
-        this._coolTime = this._maxCoolTime * Math.random();
+        this._coolTime = this._maxCoolTime * randomFunc(); // 전달된 랜덤 함수 사용
         this._skillRate = 0.2 * this.weight;
         const maxLine = Math.ceil(max / 10);
         const line = Math.floor(order / 10);
@@ -1891,7 +1910,8 @@ class Marble {
     _updateSkillInformation(deltaTime) {
         if (this._coolTime > 0) this._coolTime -= deltaTime;
         if (this._coolTime <= 0) {
-            this.skill = Math.random() < this._skillRate ? (0, _constants.Skills).Impact : (0, _constants.Skills).None;
+            // 시드 기반 랜덤 함수 사용 (멀티플레이어 동기화)
+            this.skill = this._randomFunc() < this._skillRate ? (0, _constants.Skills).Impact : (0, _constants.Skills).None;
             this._coolTime = this._maxCoolTime;
         }
     }
@@ -11194,14 +11214,16 @@ class Box2dPhysics {
         bodyDef.set_type(this.Box2D.b2_dynamicBody);
         bodyDef.set_position(new this.Box2D.b2Vec2(x, y));
         const body = this.world.CreateBody(bodyDef);
-        body.CreateFixture(circleShape, 1 + Math.random());
+        // 시드 기반 랜덤 사용 (멀티플레이어 동기화)
+        body.CreateFixture(circleShape, 1 + this.randomFunc());
         body.SetAwake(false);
         body.SetEnabled(false);
         this.marbleMap[id] = body;
     }
     shakeMarble(id) {
         const body = this.marbleMap[id];
-        if (body) body.ApplyLinearImpulseToCenter(new this.Box2D.b2Vec2(Math.random() * 10 - 5, Math.random() * 10 - 5), true);
+        if (body) // 시드 기반 랜덤 사용 (멀티플레이어 동기화)
+        body.ApplyLinearImpulseToCenter(new this.Box2D.b2Vec2(this.randomFunc() * 10 - 5, this.randomFunc() * 10 - 5), true);
     }
     removeMarble(id) {
         const marble = this.marbleMap[id];
@@ -11273,10 +11295,18 @@ class Box2dPhysics {
             }
         }
     }
+    /**
+   * 랜덤 함수 설정 (멀티플레이어 동기화용)
+   * @param randomFunc 시드 기반 랜덤 함수
+   */ setRandomFunc(randomFunc) {
+        this.randomFunc = randomFunc;
+    }
     constructor(){
         this.marbleMap = {};
         this.entities = [];
         this.deleteCandidates = [];
+        this.randomFunc = Math.random // 시드 기반 랜덤 함수 (동기화용)
+        ;
     }
 }
 
@@ -11795,18 +11825,24 @@ class MultiplayerUI {
             (0, _logger.Logger).info('MultiplayerUI', "\uAD6C\uC2AC \uC774\uB984 \uBC30\uC5F4 \uC0DD\uC131", {
                 names
             });
-            // ⚠️ 수정: 먼저 구슬 설정, 그 다음 맵 설정
-            // 1. 랜덤 시드를 setMarbles 이전에 설정
+            // ⚠️ FIX: setMap이 내부에서 setMarbles를 다시 호출하는 문제 해결
+            // 1. 랜덤 시드를 먼저 설정
             if (config.randomSeed) {
                 window.roulette.setRandomSeed(config.randomSeed);
-                (0, _logger.Logger).info('MultiplayerUI', "\uB79C\uB364 \uC2DC\uB4DC \uC124\uC815 \uD638\uCD9C (setMarbles \uC774\uC804)", {
+                (0, _logger.Logger).info('MultiplayerUI', "\uB79C\uB364 \uC2DC\uB4DC \uC124\uC815", {
                     randomSeed: config.randomSeed
                 });
             }
-            // 2. 참가자 이름으로 구슬 설정 (randomSeed 적용됨)
+            // 2. 맵을 먼저 설정 (맵이 설정되지 않으면 구슬이 생성되지 않음)
+            window.roulette.setMapOnly(config.mapIndex);
+            (0, _logger.Logger).info('MultiplayerUI', "\uB9F5 \uC124\uC815 \uC644\uB8CC", {
+                mapIndex: config.mapIndex
+            });
+            // 3. 구슬 설정 (randomSeed가 유지된 상태로 설정됨)
             window.roulette.setMarbles(names);
-            // 3. 맵 설정 (setMap이 내부에서 setMarbles를 호출하므로 구슬이 이미 설정되어 있어야 함)
-            window.roulette.setMap(config.mapIndex);
+            (0, _logger.Logger).info('MultiplayerUI', "\uAD6C\uC2AC \uC124\uC815 \uC644\uB8CC", {
+                count: names.length
+            });
             // 당첨 순위 설정
             window.options.winningRank = config.winnerRank;
             window.roulette.setWinningRank(config.winnerRank);
@@ -11846,43 +11882,22 @@ class MultiplayerUI {
         });
     }
     /**
-   * 방 생성 모달 표시
+   * 방 생성 모달 표시 (이름 입력 제거 - 자동으로 "호스트"로 설정)
    */ showCreateRoomModal() {
-        const modal = document.getElementById('mp-modal');
-        const title = document.getElementById('mp-modal-title');
-        const content = document.getElementById('mp-modal-content');
-        if (!modal || !title || !content) return;
-        title.textContent = "\uBC29 \uB9CC\uB4E4\uAE30";
-        content.innerHTML = `
-      <div class="mp-modal-form">
-        <label>
-          \u{C774}\u{B984}:
-          <input type="text" id="mp-player-name" placeholder="\u{C774}\u{B984}\u{C744} \u{C785}\u{B825}\u{D558}\u{C138}\u{C694}" maxlength="20" />
-        </label>
-        <button id="mp-create-btn" class="mp-btn-primary">\u{BC29} \u{B9CC}\u{B4E4}\u{AE30}</button>
-        <button id="mp-cancel-btn" class="mp-btn-secondary">\u{CDE8}\u{C18C}</button>
-      </div>
-    `;
-        modal.style.display = 'flex';
-        // 버튼 이벤트
-        document.getElementById('mp-create-btn')?.addEventListener('click', async ()=>{
-            const nameInput = document.getElementById('mp-player-name');
-            const playerName = nameInput?.value.trim();
-            if (!playerName) {
-                alert("\uC774\uB984\uC744 \uC785\uB825\uD574\uC8FC\uC138\uC694.");
-                return;
-            }
-            try {
-                const roomId = await this.roomManager.createRoom(playerName);
-                this.onRoomCreated(roomId);
-                modal.style.display = 'none';
-            } catch (error) {
-                alert("\uBC29 \uC0DD\uC131 \uC2E4\uD328: " + error.message);
-            }
-        });
-        document.getElementById('mp-cancel-btn')?.addEventListener('click', ()=>{
-            modal.style.display = 'none';
-        });
+        // 이름 입력 없이 바로 방 생성
+        this.createRoomDirectly();
+    }
+    /**
+   * 방 생성 (이름 입력 없이 바로 생성)
+   */ async createRoomDirectly() {
+        const playerName = "\uD638\uC2A4\uD2B8"; // 기본 이름
+        try {
+            const roomId = await this.roomManager.createRoom(playerName);
+            this.onRoomCreated(roomId);
+        } catch (error) {
+            this.showErrorUI("\uBC29 \uC0DD\uC131 \uC2E4\uD328", error.message, ()=>this.createRoomDirectly() // 재시도
+            );
+        }
     }
     /**
    * 방 참가 모달 표시
@@ -12018,7 +12033,7 @@ class MultiplayerUI {
         const copyBtn = document.getElementById('mp-copy-room-code');
         if (copyBtn) copyBtn.onclick = ()=>{
             navigator.clipboard.writeText(roomId);
-            alert("\uBC29 \uCF54\uB4DC\uAC00 \uBCF5\uC0AC\uB418\uC5C8\uC2B5\uB2C8\uB2E4!");
+            this.showToast("\uBC29 \uCF54\uB4DC\uAC00 \uBCF5\uC0AC\uB418\uC5C8\uC2B5\uB2C8\uB2E4!");
         };
         // 참가자 목록 업데이트
         this.updatePlayerList();
@@ -12239,6 +12254,66 @@ class MultiplayerUI {
         document.getElementById('mp-download-logs-btn')?.addEventListener('click', ()=>{
             (0, _logger.Logger).downloadLogs();
         });
+    }
+    /**
+   * 토스트 메시지 표시
+   * @param message 표시할 메시지
+   * @param duration 표시 시간 (ms, 기본 2000ms)
+   */ showToast(message, duration = 2000) {
+        // 기존 토스트가 있으면 제거
+        const existingToast = document.getElementById('mp-toast');
+        if (existingToast) existingToast.remove();
+        // 토스트 엘리먼트 생성
+        const toast = document.createElement('div');
+        toast.id = 'mp-toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 10000;
+      animation: mp-toast-fadein 0.3s ease-in-out;
+    `;
+        // 애니메이션 스타일 추가
+        if (!document.getElementById('mp-toast-style')) {
+            const style = document.createElement('style');
+            style.id = 'mp-toast-style';
+            style.textContent = `
+        @keyframes mp-toast-fadein {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
+        @keyframes mp-toast-fadeout {
+          from {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+          to {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+          }
+        }
+      `;
+            document.head.appendChild(style);
+        }
+        document.body.appendChild(toast);
+        // 지정된 시간 후 페이드아웃 후 제거
+        setTimeout(()=>{
+            toast.style.animation = 'mp-toast-fadeout 0.3s ease-in-out';
+            setTimeout(()=>toast.remove(), 300);
+        }, duration);
     }
     // Getter 메서드들
     getPeerManager() {

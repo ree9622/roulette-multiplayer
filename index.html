@@ -1,95 +1,393 @@
-<!DOCTYPE html><html lang=en><script type=importmap>{"imports":{"2rDQN":"/roulette-multiplayer/Box2D.simd.dd31b167.wasm","8BShk":"/roulette-multiplayer/Box2D.simd.2fa02903.js","9DwmV":"/roulette-multiplayer/kkwak.673a610d.png","cdgIR":"/roulette-multiplayer/chamru.d6926a56.png","fkRhi":"/roulette-multiplayer/junyoop.d27f0cbf.png","h7cmx":"/roulette-multiplayer/Box2D.b9b16b27.wasm","ilUZb":"/roulette-multiplayer/Box2D.a11658c7.js","juMvj":"/roulette-multiplayer/ff.e34a5107.svg","lfSvD":"/roulette-multiplayer/kubin.f3647b70.png"}}</script><meta charset=UTF-8><meta http-equiv=X-UA-Compatible content="ie=edge"><script async src="https://www.googletagmanager.com/gtag/js?id=G-5899C1DJM0"></script><title>Marble Roulette</title><meta name=viewport content="width=device-width, initial-scale=1.0"><link rel=apple-touch-icon sizes=57x57 href=/roulette-multiplayer/apple-icon-57x57.5ecd1650.png><link rel=apple-touch-icon sizes=60x60 href=/roulette-multiplayer/apple-icon-60x60.b46a75af.png><link rel=apple-touch-icon sizes=72x72 href=/roulette-multiplayer/apple-icon-72x72.4726ed35.png><link rel=apple-touch-icon sizes=76x76 href=/roulette-multiplayer/apple-icon-76x76.72dbc1e1.png><link rel=apple-touch-icon sizes=114x114 href=/roulette-multiplayer/apple-icon-114x114.6cefcd75.png><link rel=apple-touch-icon sizes=120x120 href=/roulette-multiplayer/apple-icon-120x120.462d8e84.png><link rel=apple-touch-icon sizes=144x144 href=/roulette-multiplayer/apple-icon-144x144.36ef70f8.png><link rel=apple-touch-icon sizes=152x152 href=/roulette-multiplayer/apple-icon-152x152.1f1d2b56.png><link rel=apple-touch-icon sizes=180x180 href=/roulette-multiplayer/apple-icon-180x180.33666671.png><link rel=icon type=image/png sizes=192x192 href=/roulette-multiplayer/android-icon-192x192.6c0734fc.png><link rel=icon type=image/png sizes=32x32 href=/roulette-multiplayer/favicon-32x32.b3414860.png><link rel=icon type=image/png sizes=96x96 href=/roulette-multiplayer/favicon-96x96.b086bd80.png><link rel=icon type=image/png sizes=16x16 href=/roulette-multiplayer/favicon-16x16.b88a3ef4.png><link rel=manifest href=/roulette-multiplayer/assets/manifest.webmanifest><meta name=msapplication-TileColor content=#ffffff><meta name=msapplication-TileImage content=/roulette-multiplayer/ms-icon-144x144.e402ee4a.png><meta name=theme-color content=#ffffff><meta name=description content="A lucky draw by dropping marbles, made by lazygyu"><meta property=og:url content=https://lazygyu.github.io/roulette/><meta property=og:title content="Marble Roulette"><meta property=og:description content="A lucky draw by dropping marbles, made by lazygyu"><meta property=og:site_name content=lazygyu.github.io><meta property=og:type content=website><link rel=stylesheet href=/roulette-multiplayer/roulette.88dfa79e.css><body>
-<script type=module src=/roulette-multiplayer/roulette.22437f46.js></script>
-<script>function gtag(){dataLayer.push(arguments)}function getNames(){return document.querySelector("#in_names").value.trim().split(/[,\r\n]/g).map(e=>e.trim()).filter(e=>!!e)}function parseName(e){let t=/(\/\d+)/,n=/(\*\d+)/,i=t.test(e),o=n.test(e),a=/^\s*([^\/*]+)?/.exec(e)[1];return{name:a,weight:i?parseInt(t.exec(e)[1].replace("/","")):1,count:o?parseInt(n.exec(e)[1].replace("*","")):1}}function getReady(){let e=getNames();switch(window.roulette.setMarbles(e),ready=e.length>0,localStorage.setItem("mbr_names",e.join(",")),winnerType){case"first":setWinnerRank(1);break;case"last":setWinnerRank(window.roulette.getCount())}}function setWinnerRank(e){document.querySelector("#in_winningRank").value=e,window.options.winningRank=e-1,window.roulette.setWinningRank(window.options.winningRank),"first"===winnerType?(document.querySelector(".btn-first-winner").classList.toggle("active",!0),document.querySelector(".btn-last-winner").classList.toggle("active",!1),document.querySelector("#in_winningRank").classList.toggle("active",!1)):"last"===winnerType?(document.querySelector(".btn-first-winner").classList.toggle("active",!1),document.querySelector(".btn-last-winner").classList.toggle("active",!0),document.querySelector("#in_winningRank").classList.toggle("active",!1)):"custom"===winnerType&&(document.querySelector(".btn-first-winner").classList.toggle("active",!1),document.querySelector(".btn-last-winner").classList.toggle("active",!1),document.querySelector("#in_winningRank").classList.toggle("active",!0))}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","G-5899C1DJM0");let ready=!1,winnerType="first";function initialize(){if(!window.roulette||!window.roulette.isReady){console.log("does not loaded yet"),setTimeout(initialize,100);return}console.log("initializing start");let e=localStorage.getItem("mbr_names");e&&(document.querySelector("#in_names").value=e),document.querySelector("#in_names").addEventListener("input",()=>{getReady()}),document.querySelector("#in_names").addEventListener("blur",()=>{let e=getNames(),t=new Set,n={};e.forEach(e=>{let i=parseName(e),o=i.weight>1?`${i.name}/${i.weight}`:i.name;t.has(o)||(t.add(o),n[o]=0),n[o]+=i.count});let i=[];Object.keys(n).forEach(e=>{n[e]>1?i.push(`${e}*${n[e]}`):i.push(e)});let o=document.querySelector("#in_names").value,a=i.join(",");o!==a&&(document.querySelector("#in_names").value=a,getReady())}),document.querySelector("#btnShuffle").addEventListener("click",()=>{getReady()});let t=!1;setInterval(()=>{if(window.multiplayerUI&&window.multiplayerUI.getRoomManager().getRoomId()){let e=window.multiplayerUI.getRoomManager(),n=window.multiplayerUI.getGameSync();if(e.getIsHost()){let e=window.roulette.getFastForwarder().getEnabled();e!==t&&(t=e,n.setFastForward(e))}}},100),document.querySelector("#btnStart").addEventListener("click",()=>{if(ready){if(gtag&&gtag("event","start",{event_category:"roulette",event_label:"start",value:window.roulette.getCount()}),window.multiplayerUI&&window.multiplayerUI.getRoomManager().getRoomId()){let e=window.multiplayerUI.getRoomManager(),t=window.multiplayerUI.getGameSync();if(!e.getIsHost())return void alert("호스트만 게임을 시작할 수 있습니다.");{if(!e.areAllPlayersReady())return void alert("모든 참가자가 준비될 때까지 기다려주세요.");let n=e.getPlayers().map(e=>e.name),i=parseInt(document.querySelector("#sltMap").value),o=window.options.winningRank;return console.log("[MultiplayerMode] 게임 시작:",n,i,o),void t.startGame(n,i,o)}}window.roulette.start(),document.querySelector("#settings").classList.add("hide")}}),document.querySelector("#chkAutoRecording").addEventListener("change",e=>{window.options.autoRecording=e.target.matches(":checked"),window.roulette.setAutoRecording(window.options.autoRecording)}),document.querySelector("#chkSkill").addEventListener("change",e=>{window.options.useSkills=e.target.matches(":checked"),window.roulette.setWinningRank(window.options.winningRank)}),document.querySelector("#in_winningRank").addEventListener("change",e=>{let t=parseInt(e.target.value,10);winnerType="custom",setWinnerRank(isNaN(t)?0:t)}),document.querySelector(".btn-last-winner").addEventListener("click",()=>{let e=window.roulette.getCount();winnerType="last",setWinnerRank(e)}),document.querySelector(".btn-first-winner").addEventListener("click",()=>{winnerType="first",setWinnerRank(1)}),document.querySelector("#btnShake").addEventListener("click",()=>{window.roulette.shake(),gtag("event","shake",{event_category:"roulette",event_label:"shake",value:1})}),window.roulette.addEventListener("goal",e=>{if(window.multiplayerUI&&window.multiplayerUI.getRoomManager().getRoomId()){let t=window.multiplayerUI.getRoomManager(),n=window.multiplayerUI.getGameSync(),i=e.detail.fromHost||!1;if(t.getIsHost()){let i=e.detail.winner,o=t.getPlayers().map(e=>e.name);console.log("[Multiplayer] 호스트가 게임 종료 브로드캐스트:",i),n.endGame([i],o),ready=!1,setTimeout(()=>{document.querySelector("#settings").classList.remove("hide")},3e3)}else{if(!i)return void console.log("[Multiplayer] 참가자 - 자체 결과 무시 (호스트 결과 대기 중)");console.log("[Multiplayer] 참가자 - 호스트 결과 수신:",e.detail.winner),ready=!1,setTimeout(()=>{document.querySelector("#settings").classList.remove("hide")},3e3)}}else ready=!1,setTimeout(()=>{document.querySelector("#settings").classList.remove("hide")},3e3)}),window.roulette.addEventListener("shakeAvailableChanged",e=>{document.querySelector("#inGame").classList.toggle("hide",!e.detail)}),window.roulette.addEventListener("message",e=>{var t=e.detail;let n=document.createElement("div");n.classList.add("toast"),n.innerHTML=t,window.translateElement&&(console.log("try to translate"),window.translateElement(n)),document.body.appendChild(n),setTimeout(()=>{document.body.removeChild(n)},1200)}),document.querySelector("#btnShuffle").click();let n=window.roulette.getMaps(),i=document.querySelector("#sltMap");n.forEach(e=>{let t=document.createElement("option");t.value=e.index,t.innerHTML=e.title,t.setAttribute("data-trans",""),window.translateElement(t),i.append(t)}),i.addEventListener("change",e=>{let t=e.target.value;window.roulette.setMap(t)})}document.addEventListener("DOMContentLoaded",()=>{initialize()});</script>
-<div id=settings class=settings>
-  <div class=right>
-    <div class=row>
+<!DOCTYPE html><html lang="en"><head><script type="importmap">{"imports":{"2RfBo":"/kkwak.8288312c.png","3AI0W":"/Box2D.368c577c.wasm","4ZtA3":"/ff.f22e3cf2.svg","5TMa2":"/junyoop.1200c7a5.png","5mBqN":"/kubin.860ce731.png","8OvAP":"/Box2D.simd.75bf81fb.wasm","aspIg":"/Box2D.a070c79d.js","g6HnH":"/Box2D.simd.7cdb49ce.js","kCzMz":"/chamru.192d6726.png"}}</script>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-5899C1DJM0"></script>
+
+  <title>Marble Roulette</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.2f316c01.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.3597a0fa.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.38143b41.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.c2eb0cfb.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.482241b6.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.721e3998.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.15b26ac4.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.c70b6780.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.1c38e27c.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/android-icon-192x192.778fbd46.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.09fde066.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.b27ae6bd.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.c68c989a.png">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+
+  <meta name="msapplication-TileColor" content="#ffffff">
+  <meta name="msapplication-TileImage" content="/ms-icon-144x144.8429dbf3.png">
+  <meta name="theme-color" content="#ffffff">
+
+  <meta name="description" content="A lucky draw by dropping marbles, made by lazygyu">
+  <meta property="og:url" content="https://lazygyu.github.io/roulette/">
+  <meta property="og:title" content="Marble Roulette">
+  <meta property="og:description" content="A lucky draw by dropping marbles, made by lazygyu">
+  <meta property="og:site_name" content="lazygyu.github.io">
+  <meta property="og:type" content="website">
+
+  <link rel="stylesheet" href="/roulette.72fc1a99.css">
+</head>
+<body>
+<script type="module" src="/roulette.34df32e0.js"></script>
+<script type="text/javascript">window.dataLayer = window.dataLayer || [];
+function gtag() {
+    dataLayer.push(arguments);
+}
+gtag('js', new Date());
+gtag('config', 'G-5899C1DJM0');
+function getNames() {
+    const value = document.querySelector('#in_names').value.trim();
+    return value.split(/[,\r\n]/g).map((v)=>v.trim()).filter((v)=>!!v);
+}
+function parseName(nameStr) {
+    const weightRegex = /(\/\d+)/;
+    const countRegex = /(\*\d+)/;
+    const hasWeight = weightRegex.test(nameStr);
+    const hasCount = countRegex.test(nameStr);
+    const name = /^\s*([^\/*]+)?/.exec(nameStr)[1];
+    const weight = hasWeight ? parseInt(weightRegex.exec(nameStr)[1].replace('/', '')) : 1;
+    const count = hasCount ? parseInt(countRegex.exec(nameStr)[1].replace('*', '')) : 1;
+    return {
+        name,
+        weight,
+        count
+    };
+}
+function getReady() {
+    const names = getNames();
+    window.roulette.setMarbles(names);
+    ready = names.length > 0;
+    localStorage.setItem('mbr_names', names.join(','));
+    switch(winnerType){
+        case 'first':
+            setWinnerRank(1);
+            break;
+        case 'last':
+            const total = window.roulette.getCount();
+            setWinnerRank(total);
+            break;
+    }
+}
+function setWinnerRank(rank) {
+    document.querySelector('#in_winningRank').value = rank;
+    window.options.winningRank = rank - 1;
+    window.roulette.setWinningRank(window.options.winningRank);
+    if (winnerType === 'first') {
+        document.querySelector('.btn-first-winner').classList.toggle('active', true);
+        document.querySelector('.btn-last-winner').classList.toggle('active', false);
+        document.querySelector('#in_winningRank').classList.toggle('active', false);
+    } else if (winnerType === 'last') {
+        document.querySelector('.btn-first-winner').classList.toggle('active', false);
+        document.querySelector('.btn-last-winner').classList.toggle('active', true);
+        document.querySelector('#in_winningRank').classList.toggle('active', false);
+    } else if (winnerType === 'custom') {
+        document.querySelector('.btn-first-winner').classList.toggle('active', false);
+        document.querySelector('.btn-last-winner').classList.toggle('active', false);
+        document.querySelector('#in_winningRank').classList.toggle('active', true);
+    }
+}
+let ready = false;
+let winnerType = 'first';
+document.addEventListener('DOMContentLoaded', ()=>{
+    initialize();
+});
+function initialize() {
+    if (!window.roulette || !window.roulette.isReady) {
+        console.log('does not loaded yet');
+        setTimeout(initialize, 100);
+        return;
+    }
+    console.log('initializing start');
+    const savedNames = localStorage.getItem('mbr_names');
+    if (savedNames) document.querySelector('#in_names').value = savedNames;
+    document.querySelector('#in_names').addEventListener('input', ()=>{
+        getReady();
+    });
+    document.querySelector('#in_names').addEventListener('blur', ()=>{
+        const nameSource = getNames();
+        const nameSet = new Set();
+        const nameCounts = {};
+        nameSource.forEach((nameSrc)=>{
+            const name = parseName(nameSrc);
+            const key = name.weight > 1 ? `${name.name}/${name.weight}` : name.name;
+            if (!nameSet.has(key)) {
+                nameSet.add(key);
+                nameCounts[key] = 0;
+            }
+            nameCounts[key] += name.count;
+        });
+        const result = [];
+        Object.keys(nameCounts).forEach((key)=>{
+            if (nameCounts[key] > 1) result.push(`${key}*${nameCounts[key]}`);
+            else result.push(key);
+        });
+        const oldValue = document.querySelector('#in_names').value;
+        const newValue = result.join(',');
+        if (oldValue !== newValue) {
+            document.querySelector('#in_names').value = newValue;
+            getReady();
+        }
+    });
+    document.querySelector('#btnShuffle').addEventListener('click', ()=>{
+        getReady();
+    });
+    // 빨리감기 상태 감시 (멀티플레이어용)
+    let lastFastForwardState = false;
+    setInterval(()=>{
+        if (window.multiplayerUI && window.multiplayerUI.getRoomManager().getRoomId()) {
+            const roomManager = window.multiplayerUI.getRoomManager();
+            const gameSync = window.multiplayerUI.getGameSync();
+            if (roomManager.getIsHost()) {
+                const fastForwarder = window.roulette.getFastForwarder();
+                const currentState = fastForwarder.getEnabled();
+                if (currentState !== lastFastForwardState) {
+                    lastFastForwardState = currentState;
+                    gameSync.setFastForward(currentState);
+                }
+            }
+        }
+    }, 100);
+    document.querySelector('#btnStart').addEventListener('click', ()=>{
+        if (!ready) return;
+        gtag && gtag('event', 'start', {
+            'event_category': 'roulette',
+            'event_label': 'start',
+            'value': window.roulette.getCount()
+        });
+        // 멀티플레이어 모드인 경우 GameSync를 통해 시작
+        if (window.multiplayerUI && window.multiplayerUI.getRoomManager().getRoomId()) {
+            const roomManager = window.multiplayerUI.getRoomManager();
+            const gameSync = window.multiplayerUI.getGameSync();
+            // 호스트만 게임 시작 가능
+            if (roomManager.getIsHost()) {
+                // 모든 참가자가 준비되었는지 확인
+                if (!roomManager.areAllPlayersReady()) {
+                    alert("\uBAA8\uB4E0 \uCC38\uAC00\uC790\uAC00 \uC900\uBE44\uB420 \uB54C\uAE4C\uC9C0 \uAE30\uB2E4\uB824\uC8FC\uC138\uC694.");
+                    return;
+                }
+                // 게임 설정 수집 - 참가자 이름들을 구슬로 사용
+                const players = roomManager.getPlayers();
+                const names = players.map((player)=>player.name);
+                const mapIndex = parseInt(document.querySelector('#sltMap').value);
+                const winnerRank = window.options.winningRank;
+                console.log("[MultiplayerMode] \uAC8C\uC784 \uC2DC\uC791:", names, mapIndex, winnerRank);
+                // GameSync를 통해 게임 시작 (모든 참가자에게 브로드캐스트)
+                // GameSync가 알아서 호스트도 게임을 시작하므로 여기서는 return
+                gameSync.startGame(names, mapIndex, winnerRank);
+                // UI 숨기기는 GameSync의 gameStart 이벤트에서 처리됨
+                return;
+            } else {
+                alert("\uD638\uC2A4\uD2B8\uB9CC \uAC8C\uC784\uC744 \uC2DC\uC791\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.");
+                return;
+            }
+        }
+        // 싱글플레이어 모드
+        window.roulette.start();
+        document.querySelector('#settings').classList.add('hide');
+    });
+    document.querySelector('#chkAutoRecording').addEventListener('change', (e)=>{
+        window.options.autoRecording = e.target.matches(':checked');
+        window.roulette.setAutoRecording(window.options.autoRecording);
+    });
+    document.querySelector('#chkSkill').addEventListener('change', (e)=>{
+        window.options.useSkills = e.target.matches(':checked');
+        window.roulette.setWinningRank(window.options.winningRank);
+    });
+    document.querySelector('#in_winningRank').addEventListener('change', (e)=>{
+        const v = parseInt(e.target.value, 10);
+        winnerType = 'custom';
+        setWinnerRank(isNaN(v) ? 0 : v);
+    });
+    document.querySelector('.btn-last-winner').addEventListener('click', ()=>{
+        const total = window.roulette.getCount();
+        winnerType = 'last';
+        setWinnerRank(total);
+    });
+    document.querySelector('.btn-first-winner').addEventListener('click', ()=>{
+        winnerType = 'first';
+        setWinnerRank(1);
+    });
+    document.querySelector('#btnShake').addEventListener('click', ()=>{
+        window.roulette.shake();
+        gtag('event', 'shake', {
+            'event_category': 'roulette',
+            'event_label': 'shake',
+            'value': 1
+        });
+    });
+    window.roulette.addEventListener('goal', (e)=>{
+        // 멀티플레이어 모드 체크
+        if (window.multiplayerUI && window.multiplayerUI.getRoomManager().getRoomId()) {
+            const roomManager = window.multiplayerUI.getRoomManager();
+            const gameSync = window.multiplayerUI.getGameSync();
+            const fromHost = e.detail.fromHost || false;
+            if (roomManager.getIsHost()) {
+                // 호스트만 게임 종료 브로드캐스트
+                const winner = e.detail.winner;
+                const allPlayers = roomManager.getPlayers().map((p)=>p.name);
+                console.log("[Multiplayer] \uD638\uC2A4\uD2B8\uAC00 \uAC8C\uC784 \uC885\uB8CC \uBE0C\uB85C\uB4DC\uCE90\uC2A4\uD2B8:", winner);
+                gameSync.endGame([
+                    winner
+                ], allPlayers);
+                // 호스트 UI 처리
+                ready = false;
+                setTimeout(()=>{
+                    document.querySelector('#settings').classList.remove('hide');
+                }, 3000);
+            } else if (fromHost) {
+                // 참가자가 호스트로부터 받은 결과 처리
+                console.log("[Multiplayer] \uCC38\uAC00\uC790 - \uD638\uC2A4\uD2B8 \uACB0\uACFC \uC218\uC2E0:", e.detail.winner);
+                // 참가자 UI 처리
+                ready = false;
+                setTimeout(()=>{
+                    document.querySelector('#settings').classList.remove('hide');
+                }, 3000);
+            } else {
+                // 참가자의 자체 물리 시뮬레이션 결과는 무시
+                console.log("[Multiplayer] \uCC38\uAC00\uC790 - \uC790\uCCB4 \uACB0\uACFC \uBB34\uC2DC (\uD638\uC2A4\uD2B8 \uACB0\uACFC \uB300\uAE30 \uC911)");
+                return;
+            }
+        } else {
+            // 싱글플레이어 모드
+            ready = false;
+            setTimeout(()=>{
+                document.querySelector('#settings').classList.remove('hide');
+            }, 3000);
+        }
+    });
+    window.roulette.addEventListener('shakeAvailableChanged', (e)=>{
+        document.querySelector('#inGame').classList.toggle('hide', !e.detail);
+    });
+    window.roulette.addEventListener('message', (e)=>{
+        simpleToast(e.detail);
+    });
+    document.querySelector('#btnShuffle').click();
+    const maps = window.roulette.getMaps();
+    const mapSelector = document.querySelector('#sltMap');
+    maps.forEach((map)=>{
+        const option = document.createElement('option');
+        option.value = map.index;
+        option.innerHTML = map.title;
+        option.setAttribute('data-trans', '');
+        window.translateElement(option);
+        mapSelector.append(option);
+    });
+    mapSelector.addEventListener('change', (e)=>{
+        const index = e.target.value;
+        window.roulette.setMap(index);
+    });
+    function simpleToast(msg) {
+        const toast = document.createElement('div');
+        toast.classList.add('toast');
+        toast.innerHTML = msg;
+        if (window.translateElement) {
+            console.log('try to translate');
+            window.translateElement(toast);
+        }
+        document.body.appendChild(toast);
+        setTimeout(()=>{
+            document.body.removeChild(toast);
+        }, 1200);
+    }
+}
+
+</script>
+<div id="settings" class="settings">
+  <div class="right">
+    <div class="row">
       <label>
         <i class="icon map"></i>
-        <span data-trans>Map</span>
+        <span data-trans="">Map</span>
       </label>
-      <select id=sltMap></select>
+      <select id="sltMap"></select>
     </div>
-    <div class=row>
+    <div class="row">
       <label>
         <i class="icon record"></i>
-        <span data-trans>Recording</span>
+        <span data-trans="">Recording</span>
       </label>
-      <input type=checkbox id=chkAutoRecording>
+      <input type="checkbox" id="chkAutoRecording">
     </div>
-    <div class=row>
+    <div class="row">
       <label>
         <i class="icon trophy"></i>
-        <span data-trans>The winner is</span>
+        <span data-trans="">The winner is</span>
       </label>
-      <div class=btn-group>
-        <button class="active btn-first-winner btn-winner" data-trans>First</button>
-        <button class="btn-last-winner btn-winner" data-trans>Last</button>
-        <input type=number id=in_winningRank value=1 min=1>
+      <div class="btn-group">
+        <button class="btn-winner btn-first-winner active" data-trans="">First</button>
+        <button class="btn-winner btn-last-winner" data-trans="">Last</button>
+        <input type="number" id="in_winningRank" value="1" min="1">
       </div>
     </div>
-    <div class=row>
+    <div class="row">
       <label>
-        <i class="bomb icon"></i>
-        <span data-trans>Using skills</span>
+        <i class="icon bomb"></i>
+        <span data-trans="">Using skills</span>
       </label>
-      <input type=checkbox id=chkSkill checked>
+      <input type="checkbox" id="chkSkill" checked="">
     </div>
   </div>
-  <div class=left>
-    <h3 data-trans>Enter names below</h3>
-    <textarea id=in_names placeholder="Input names separated by commas or line feed here" data-trans=placeholder>짱구*5, 짱아*10, 봉미선*3</textarea>
-    <div class=actions>
-      <button id=mp-create-room-btn class=mp-btn>
+  <div class="left">
+    <h3 data-trans="">Enter names below</h3>
+    <textarea id="in_names" placeholder="Input names separated by commas or line feed here" data-trans="placeholder">짱구*5, 짱아*10, 봉미선*3</textarea>
+    <div class="actions">
+      <button id="mp-create-room-btn" class="mp-btn">
         <span>🏠 방 만들기</span>
       </button>
-      <button id=mp-join-room-btn class=mp-btn>
+      <button id="mp-join-room-btn" class="mp-btn">
         <span>🚪 방 참가하기</span>
       </button>
-      <div class=sep></div>
-      <button id=btnShuffle>
+      <div class="sep"></div>
+      <button id="btnShuffle">
         <i class="icon shuffle"></i>
-        <span data-trans>Shuffle</span>
+        <span data-trans="">Shuffle</span>
       </button>
-      <button id=btnStart>
+      <button id="btnStart">
         <i class="icon play"></i>
-        <span data-trans>Start</span>
+        <span data-trans="">Start</span>
       </button>
     </div>
   </div>
 </div>
-<div id=inGame class="hide settings">
-  <button id=btnShake data-trans>Shake!</button>
+<div id="inGame" class="settings hide">
+  <button id="btnShake" data-trans="">Shake!</button>
 </div>
-
-<div id=mp-modal class=mp-modal style=display:none>
-  <div class=mp-modal-content>
-    <h2 id=mp-modal-title></h2>
-    <div id=mp-modal-content></div>
+<!-- 멀티플레이어 모달 -->
+<div id="mp-modal" class="mp-modal" style="display: none">
+  <div class="mp-modal-content">
+    <h2 id="mp-modal-title"></h2>
+    <div id="mp-modal-content"></div>
   </div>
 </div>
 
-
-<div id=mp-room-panel class=mp-room-panel style=display:none>
-  <div class=mp-room-header>
+<!-- 멀티플레이어 룸 패널 -->
+<div id="mp-room-panel" class="mp-room-panel" style="display: none">
+  <div class="mp-room-header">
     <h3>🎮 멀티플레이어</h3>
-    <div class=mp-room-code-container>
+    <div class="mp-room-code-container">
       <span>방 코드:</span>
-      <span id=mp-room-code-display class=mp-room-code></span>
-      <button id=mp-copy-room-code class=mp-btn-copy>📋 복사</button>
+      <span id="mp-room-code-display" class="mp-room-code"></span>
+      <button id="mp-copy-room-code" class="mp-btn-copy">📋 복사</button>
     </div>
   </div>
-  <div class=mp-player-list-container>
+  <div class="mp-player-list-container">
     <h4>참가자 목록</h4>
-    <div id=mp-player-list class=mp-player-list></div>
+    <div id="mp-player-list" class="mp-player-list"></div>
   </div>
-  <div class=mp-room-actions>
-    <button id=mp-change-name-btn class=mp-btn-secondary style=display:inline-block>이름 변경</button>
-    <button id=mp-ready-btn class=mp-btn-primary style=display:none>준비</button>
-    <button id=mp-leave-room-btn class=mp-btn-secondary style=display:none>나가기</button>
+  <div class="mp-room-actions">
+    <button id="mp-change-name-btn" class="mp-btn-secondary" style="display: inline-block">이름 변경</button>
+    <button id="mp-ready-btn" class="mp-btn-primary" style="display: none">준비</button>
+    <button id="mp-leave-room-btn" class="mp-btn-secondary" style="display: none">나가기</button>
   </div>
 </div>
-<div class=copyright>© 2022-2025.<a href=https://lazygyu.net target=_blank>lazygyu</a> <span data-trans>This program is freeware and may be used freely anywhere, including in broadcasts and videos.</span>
+<div class="copyright">© 2022-2025.<a href="https://lazygyu.net" target="_blank">lazygyu</a> <span data-trans="">This program is freeware and may be used freely anywhere, including in broadcasts and videos.</span>
 </div>
 
 
+</body></html>
