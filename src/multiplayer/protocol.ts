@@ -30,6 +30,7 @@ export enum MessageType {
   GAME_END = 'GAME_END',                   // 게임 종료
   PAUSE_GAME = 'PAUSE_GAME',               // 게임 일시정지
   RESUME_GAME = 'RESUME_GAME',             // 게임 재개
+  FAST_FORWARD = 'FAST_FORWARD',           // 빨리감기 상태 변경
 
   // 호스트 제어
   KICK_PLAYER = 'KICK_PLAYER',             // 참가자 강퇴
@@ -191,6 +192,13 @@ export interface ResumeGameMessage extends BaseMessage {
   payload: {};
 }
 
+export interface FastForwardMessage extends BaseMessage {
+  type: MessageType.FAST_FORWARD;
+  payload: {
+    isEnabled: boolean;                    // 빨리감기 활성화 여부
+  };
+}
+
 export interface KickPlayerMessage extends BaseMessage {
   type: MessageType.KICK_PLAYER;
   payload: {
@@ -231,6 +239,7 @@ export type Message =
   | GameEndMessage
   | PauseGameMessage
   | ResumeGameMessage
+  | FastForwardMessage
   | KickPlayerMessage
   | ChatMessage
   | ErrorMessage;

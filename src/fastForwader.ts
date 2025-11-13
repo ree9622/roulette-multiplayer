@@ -23,6 +23,21 @@ export class FastForwader implements UIObject {
     return this.isEnabled ? 2 : 1;
   }
 
+  /**
+   * 빨리감기 활성화/비활성화 (외부 제어용)
+   * @param enabled 활성화 여부
+   */
+  public setEnabled(enabled: boolean): void {
+    this.isEnabled = enabled;
+  }
+
+  /**
+   * 현재 빨리감기 상태
+   */
+  public getEnabled(): boolean {
+    return this.isEnabled;
+  }
+
   update(deltaTime: number): void {
   }
 

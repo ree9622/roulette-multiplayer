@@ -139,9 +139,40 @@ export class MultiplayerUI {
       document.querySelector('#donate')?.classList.add('hide');
     });
 
-    // 게임 종료 이벤트
+    // 게임 종료 이벤트 (참가자만 받음)
     this.gameSync.on('gameEnd', (winners, results) => {
-      console.log('[MultiplayerUI] 게임 종료:', winners);
+      if (this.roomManager.getIsHost()) return; // 호스트는 이미 자기 결과 있음
+
+      console.log('[MultiplayerUI] 호스트로부터 게임 종료 수신:', winners);
+
+      // 강제로 게임 종료 처리 (호스트 결과 따르기)
+      const roulette = (window as any).roulette;
+
+      // 게임 강제 종료
+      roulette._isRunning = false;
+
+      // 우승자 알림 표시
+      roulette.dispatchEvent(
+        new CustomEvent('goal', { detail: { winner: winners[0] } })
+      );
+
+      // 파티클 효과
+      roulette._particleManager.shot(
+        roulette._renderer.width,
+        roulette._renderer.height
+      );
+    });
+
+    // 빨리감기 이벤트 (참가자만 받음)
+    this.gameSync.on('fastForward', (isEnabled: boolean) => {
+      if (this.roomManager.getIsHost()) return; // 호스트는 자기가 제어
+
+      console.log('[MultiplayerUI] 호스트 빨리감기 상태:', isEnabled);
+
+      // FastForwader 제어
+      const roulette = (window as any).roulette;
+      const fastForwarder = roulette.getFastForwarder();
+      fastForwarder.setEnabled(isEnabled);
     });
   }
 
@@ -358,6 +389,9 @@ export class MultiplayerUI {
     // 초기 버튼 표시
     this.hideMainMenuButtons();
     this.showRoomButtons(true);
+
+    // 구슬 입력란 숨기기
+    this.hideMarbleInput();
   }
 
   /**
@@ -385,6 +419,9 @@ export class MultiplayerUI {
     // 초기 버튼 표시
     this.hideMainMenuButtons();
     this.showRoomButtons(false);
+
+    // 구슬 입력란 숨기기
+    this.hideMarbleInput();
   }
 
   /**
@@ -473,6 +510,7 @@ export class MultiplayerUI {
 
       this.showMainMenuButtons();
       this.hideRoomButtons();
+      this.showMarbleInput(); // 구슬 입력란 다시 표시
     }
   }
 
@@ -519,6 +557,43 @@ export class MultiplayerUI {
 
     if (readyBtn) readyBtn.style.display = 'none';
     if (leaveBtn) leaveBtn.style.display = 'none';
+  }
+
+  /**
+   * 구슬 입력란 숨기기 (멀티플레이어 모드용)
+   */
+  private hideMarbleInput(): void {
+    // 구슬 입력란 섹션 숨기기
+    const marbleSection = document.querySelector('.left') as HTMLElement;
+    if (marbleSection) {
+      marbleSection.style.display = 'none';
+    }
+
+    // 대신 참가자 안내 메시지 표시
+    const roomPanel = document.getElementById('mp-room-panel');
+    if (roomPanel && !document.getElementById('mp-marble-info')) {
+      const infoDiv = document.createElement('div');
+      infoDiv.id = 'mp-marble-info';
+      infoDiv.style.cssText = 'padding: 10px; margin: 10px 0; background: rgba(255, 255, 255, 0.1); border-radius: 8px; text-align: center;';
+      infoDiv.innerHTML = '<p style="margin: 0; color: #fff;">✨ 참가자 이름으로 게임이 진행됩니다</p>';
+      roomPanel.appendChild(infoDiv);
+    }
+  }
+
+  /**
+   * 구슬 입력란 다시 표시
+   */
+  private showMarbleInput(): void {
+    const marbleSection = document.querySelector('.left') as HTMLElement;
+    if (marbleSection) {
+      marbleSection.style.display = 'block';
+    }
+
+    // 안내 메시지 제거
+    const infoDiv = document.getElementById('mp-marble-info');
+    if (infoDiv) {
+      infoDiv.remove();
+    }
   }
 
   // Getter 메서드들

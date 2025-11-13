@@ -26,6 +26,7 @@ export interface GameSyncEvents {
   gamePause: () => void;                      // 게임 일시정지
   gameResume: () => void;                     // 게임 재개
   stateUpdate: (state: GameState) => void;   // 상태 업데이트
+  fastForward: (isEnabled: boolean) => void; // 빨리감기
 }
 
 /**
@@ -81,6 +82,10 @@ export class GameSync {
 
       case MessageType.RESUME_GAME:
         this.emit('gameResume');
+        break;
+
+      case MessageType.FAST_FORWARD:
+        this.handleFastForward(message);
         break;
 
       default:
@@ -313,6 +318,38 @@ export class GameSync {
 
     this.peerManager.broadcast(resumeMessage);
     this.emit('gameResume');
+  }
+
+  /**
+   * 빨리감기 상태 변경 처리
+   * @param message FAST_FORWARD 메시지
+   */
+  private handleFastForward(message: any): void {
+    if (this.roomManager.getIsHost()) return; // 호스트는 자기가 제어
+
+    const { isEnabled } = message.payload;
+    console.log('[GameSync] 빨리감기 상태:', isEnabled);
+    this.emit('fastForward', isEnabled);
+  }
+
+  /**
+   * 빨리감기 (호스트만)
+   * @param isEnabled 빨리감기 활성화 여부
+   */
+  setFastForward(isEnabled: boolean): void {
+    if (!this.roomManager.getIsHost()) {
+      console.warn('[GameSync] 호스트만 빨리감기를 제어할 수 있습니다.');
+      return;
+    }
+
+    const ffMessage: Message = {
+      type: MessageType.FAST_FORWARD,
+      timestamp: Date.now(),
+      senderId: this.peerManager.getPeerId()!,
+      payload: { isEnabled }
+    };
+
+    this.peerManager.broadcast(ffMessage);
   }
 
   /**

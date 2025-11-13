@@ -162,6 +162,25 @@
       getReady();
     });
 
+    // 빨리감기 상태 감시 (멀티플레이어용)
+    let lastFastForwardState = false;
+    setInterval(() => {
+      if (window.multiplayerUI && window.multiplayerUI.getRoomManager().getRoomId()) {
+        const roomManager = window.multiplayerUI.getRoomManager();
+        const gameSync = window.multiplayerUI.getGameSync();
+
+        if (roomManager.getIsHost()) {
+          const fastForwarder = window.roulette.getFastForwarder();
+          const currentState = fastForwarder.getEnabled();
+
+          if (currentState !== lastFastForwardState) {
+            lastFastForwardState = currentState;
+            gameSync.setFastForward(currentState);
+          }
+        }
+      }
+    }, 100);
+
     document.querySelector('#btnStart').addEventListener('click', () => {
       if (!ready) return;
       gtag && gtag('event', 'start', {
@@ -244,8 +263,23 @@
       });
     });
 
-    window.roulette.addEventListener('goal', () => {
+    window.roulette.addEventListener('goal', (e) => {
       ready = false;
+
+      // 멀티플레이어 모드에서 호스트인 경우 게임 종료 브로드캐스트
+      if (window.multiplayerUI && window.multiplayerUI.getRoomManager().getRoomId()) {
+        const roomManager = window.multiplayerUI.getRoomManager();
+        const gameSync = window.multiplayerUI.getGameSync();
+
+        if (roomManager.getIsHost()) {
+          const winner = e.detail.winner;
+          const allPlayers = roomManager.getPlayers().map(p => p.name);
+
+          console.log('[Multiplayer] 호스트가 게임 종료 브로드캐스트:', winner);
+          gameSync.endGame([winner], allPlayers);
+        }
+      }
+
       setTimeout(() => {
         document.querySelector('#settings').classList.remove('hide');
         document.querySelector('#donate').classList.remove('hide');

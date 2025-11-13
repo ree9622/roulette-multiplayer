@@ -74,6 +74,10 @@ export class Roulette extends EventTarget {
     return initialZoom * this._camera.zoom;
   }
 
+  public getFastForwarder() {
+    return this.fastForwarder;
+  }
+
   private addUiObject(obj: UIObject) {
     this._uiObjects.push(obj);
     if (obj.onWheel) {
