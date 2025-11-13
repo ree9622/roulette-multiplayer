@@ -144,6 +144,7 @@ export class MultiplayerUI {
       if (this.roomManager.getIsHost()) return; // 호스트는 이미 자기 결과 있음
 
       console.log('[MultiplayerUI] 호스트로부터 게임 종료 수신:', winners);
+      Logger.info('MultiplayerUI', '호스트 게임 종료 수신', { winners });
 
       // 강제로 게임 종료 처리 (호스트 결과 따르기)
       const roulette = (window as any).roulette;
@@ -151,9 +152,14 @@ export class MultiplayerUI {
       // 게임 강제 종료
       roulette._isRunning = false;
 
-      // 우승자 알림 표시
+      // 우승자 알림 표시 (fromHost 플래그 추가)
       roulette.dispatchEvent(
-        new CustomEvent('goal', { detail: { winner: winners[0] } })
+        new CustomEvent('goal', {
+          detail: {
+            winner: winners[0],
+            fromHost: true  // 호스트로부터 받은 결과임을 표시
+          }
+        })
       );
 
       // 파티클 효과
