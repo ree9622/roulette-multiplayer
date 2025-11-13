@@ -54,6 +54,7 @@ export class Roulette extends EventTarget {
 
   private _isReady: boolean = false;
   private fastForwarder!: FastForwader;
+  private _randomSeed: number | null = null;
 
   get isReady() {
     return this._isReady;
@@ -354,6 +355,28 @@ export class Roulette extends EventTarget {
     this._autoRecording = value;
   }
 
+  /**
+   * 랜덤 시드 설정 (멀티플레이어 동기화용)
+   * @param seed 랜덤 시드 (null이면 Math.random() 사용)
+   */
+  public setRandomSeed(seed: number | null) {
+    this._randomSeed = seed;
+  }
+
+  /**
+   * 시드 기반 랜덤 함수 (Mulberry32 알고리즘)
+   * @param seed 시드 값
+   * @returns 0~1 사이의 랜덤 숫자를 반환하는 함수
+   */
+  private createSeededRandom(seed: number): () => number {
+    return function() {
+      let t = seed += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
   public setMarbles(names: string[]) {
     this.reset();
     const arr = names.slice();
@@ -382,10 +405,15 @@ export class Roulette extends EventTarget {
       }
     });
 
+    // 랜덤 함수 선택: 시드가 있으면 시드 기반, 없으면 Math.random() 사용
+    const randomFunc = this._randomSeed !== null
+      ? this.createSeededRandom(this._randomSeed)
+      : Math.random;
+
     const orders = Array(totalCount)
       .fill(0)
       .map((_, i) => i)
-      .sort(() => Math.random() - 0.5);
+      .sort(() => randomFunc() - 0.5);
     members.forEach((member) => {
       if (member) {
         for (let j = 0; j < member.count; j++) {

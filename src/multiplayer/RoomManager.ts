@@ -185,6 +185,10 @@ Manager: PeerManager;           // PeerManager 인스턴스
         this.handleReadyState(message);
         break;
 
+      case MessageType.NAME_CHANGE:
+        this.handleNameChange(message);
+        break;
+
       case MessageType.GAME_CONFIG:
         this.handleGameConfig(message);
         break;
@@ -349,6 +353,28 @@ Manager: PeerManager;           // PeerManager 인스턴스
   }
 
   /**
+   * 이름 변경 처리
+   * @param message NAME_CHANGE 메시지
+   */
+  private handleNameChange(message: any): void {
+    const { playerId, newName } = message.payload;
+    const player = this.players.get(playerId);
+
+    if (player) {
+      player.name = newName;
+      console.log('[RoomManager] 이름 변경:', playerId, '→', newName);
+
+      // 호스트인 경우 다른 모든 참가자에게 브로드캐스트
+      if (this.isHost) {
+        this.peerManager.broadcast(message, playerId);
+      }
+
+      // 이벤트 발생 (UI 업데이트용)
+      this.emit('playerJoined', player);
+    }
+  }
+
+  /**
    * 게임 설정 변경 처리
    * @param message GAME_CONFIG 메시지
    */
@@ -403,6 +429,42 @@ Manager: PeerManager;           // PeerManager 인스턴스
     this.peerManager.send(this.roomId!, readyMessage);
 
     this.emit('playerReady', myPlayer.id, newReadyState);
+  }
+
+  /**
+   * 이름 변경
+   * @param newName 새 이름
+   */
+  async changePlayerName(newName: string): Promise<void> {
+    const myPeerId = this.peerManager.getPeerId();
+    if (!myPeerId) {
+      throw new Error('Peer가 초기화되지 않았습니다.');
+    }
+
+    const myPlayer = this.players.get(myPeerId);
+    if (!myPlayer) {
+      throw new Error('플레이어 정보를 찾을 수 없습니다.');
+    }
+
+    // 로컬 플레이어 이름 변경
+    myPlayer.name = newName;
+
+    // 이름 변경 메시지 전송
+    const nameChangeMessage = MessageFactory.createNameChange(
+      myPeerId,
+      myPeerId,
+      newName
+    );
+
+    if (this.isHost) {
+      // 호스트인 경우 모든 참가자에게 브로드캐스트
+      this.peerManager.broadcast(nameChangeMessage);
+    } else {
+      // 참가자인 경우 호스트에게 전송
+      this.peerManager.send(this.roomId!, nameChangeMessage);
+    }
+
+    console.log('[RoomManager] 이름 변경:', newName);
   }
 
   /**

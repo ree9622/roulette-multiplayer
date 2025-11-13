@@ -69,6 +69,12 @@ export class MultiplayerUI {
     if (leaveBtn) {
       leaveBtn.addEventListener('click', () => this.leaveRoom());
     }
+
+    // 이름 변경 버튼 이벤트
+    const changeNameBtn = document.getElementById('mp-change-name-btn');
+    if (changeNameBtn) {
+      changeNameBtn.addEventListener('click', () => this.showChangeNameModal());
+    }
   }
 
   /**
@@ -124,7 +130,7 @@ export class MultiplayerUI {
 
       // 랜덤 시드 설정 (같은 결과를 위해)
       if (config.randomSeed) {
-        // TODO: Roulette 클래스에 시드 설정 기능 추가 필요
+        (window as any).roulette.setRandomSeed(config.randomSeed);
       }
 
       // 게임 시작
@@ -201,12 +207,12 @@ export class MultiplayerUI {
     content.innerHTML = `
       <div class="mp-modal-form">
         <label>
-          이름:
-          <input type="text" id="mp-player-name" placeholder="이름을 입력하세요" maxlength="20" />
+          방 코드:
+          <input type="text" id="mp-room-code" placeholder="6자리 방 코드" maxlength="6" style="text-transform: uppercase;" autofocus />
         </label>
         <label>
-          방 코드:
-          <input type="text" id="mp-room-code" placeholder="6자리 방 코드" maxlength="6" style="text-transform: uppercase;" />
+          이름 (선택):
+          <input type="text" id="mp-player-name" placeholder="이름 미입력 시 '게스트'로 표시" maxlength="20" />
         </label>
         <button id="mp-join-btn" class="mp-btn-primary">참가하기</button>
         <button id="mp-cancel-btn" class="mp-btn-secondary">취소</button>
@@ -215,18 +221,26 @@ export class MultiplayerUI {
 
     modal.style.display = 'flex';
 
+    // 방 코드 입력란에서 Enter 키 입력 시 참가
+    const codeInput = document.getElementById('mp-room-code') as HTMLInputElement;
+    codeInput?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('mp-join-btn')?.click();
+      }
+    });
+
+    // 이름 입력란에서 Enter 키 입력 시 참가
+    const nameInput = document.getElementById('mp-player-name') as HTMLInputElement;
+    nameInput?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('mp-join-btn')?.click();
+      }
+    });
+
     // 버튼 이벤트
     document.getElementById('mp-join-btn')?.addEventListener('click', async () => {
-      const nameInput = document.getElementById('mp-player-name') as HTMLInputElement;
-      const codeInput = document.getElementById('mp-room-code') as HTMLInputElement;
-
-      const playerName = nameInput?.value.trim();
+      const playerName = nameInput?.value.trim() || '게스트';
       const roomCode = codeInput?.value.trim().toUpperCase();
-
-      if (!playerName) {
-        alert('이름을 입력해주세요.');
-        return;
-      }
 
       if (!roomCode || roomCode.length !== 6) {
         alert('올바른 방 코드를 입력해주세요.');
@@ -239,6 +253,69 @@ export class MultiplayerUI {
         modal.style.display = 'none';
       } catch (error) {
         alert('방 참가 실패: ' + (error as Error).message);
+      }
+    });
+
+    document.getElementById('mp-cancel-btn')?.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+  }
+
+  /**
+   * 이름 변경 모달 표시
+   */
+  private showChangeNameModal(): void {
+    const modal = document.getElementById('mp-modal');
+    const title = document.getElementById('mp-modal-title');
+    const content = document.getElementById('mp-modal-content');
+
+    if (!modal || !title || !content) return;
+
+    const myPlayer = this.roomManager.getMyPlayer();
+    if (!myPlayer) return;
+
+    title.textContent = '이름 변경';
+    content.innerHTML = `
+      <div class="mp-modal-form">
+        <label>
+          새 이름:
+          <input type="text" id="mp-new-name" placeholder="새 이름을 입력하세요" maxlength="20" value="${myPlayer.name}" autofocus />
+        </label>
+        <button id="mp-change-name-confirm-btn" class="mp-btn-primary">변경</button>
+        <button id="mp-cancel-btn" class="mp-btn-secondary">취소</button>
+      </div>
+    `;
+
+    modal.style.display = 'flex';
+
+    // 새 이름 입력란에서 Enter 키 입력 시 변경
+    const newNameInput = document.getElementById('mp-new-name') as HTMLInputElement;
+    newNameInput?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('mp-change-name-confirm-btn')?.click();
+      }
+    });
+
+    // 입력란에 포커스 및 전체 선택
+    setTimeout(() => {
+      newNameInput?.select();
+    }, 100);
+
+    // 변경 버튼 이벤트
+    document.getElementById('mp-change-name-confirm-btn')?.addEventListener('click', async () => {
+      const newName = newNameInput?.value.trim() || '게스트';
+
+      if (newName === myPlayer.name) {
+        modal.style.display = 'none';
+        return;
+      }
+
+      try {
+        await this.roomManager.changePlayerName(newName);
+        modal.style.display = 'none';
+        this.updatePlayerList();
+      } catch (error) {
+        alert('이름 변경 실패: ' + (error as Error).message);
       }
     });
 

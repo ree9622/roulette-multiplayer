@@ -18,6 +18,7 @@ export enum MessageType {
   // 참가자 상태 관리
   PLAYER_LIST = 'PLAYER_LIST',             // 참가자 목록 전체 업데이트
   READY_STATE = 'READY_STATE',             // 준비 상태 변경
+  NAME_CHANGE = 'NAME_CHANGE',             // 이름 변경
 
   // 게임 설정
   GAME_CONFIG = 'GAME_CONFIG',             // 게임 설정 공유 (구슬 목록 등)
@@ -135,6 +136,14 @@ export interface ReadyStateMessage extends BaseMessage {
   };
 }
 
+export interface NameChangeMessage extends BaseMessage {
+  type: MessageType.NAME_CHANGE;
+  payload: {
+    playerId: string;                      // 이름 변경한 참가자 ID
+    newName: string;                       // 새 이름
+  };
+}
+
 export interface GameConfigMessage extends BaseMessage {
   type: MessageType.GAME_CONFIG;
   payload: {
@@ -214,6 +223,7 @@ export type Message =
   | PlayerLeftMessage
   | PlayerListMessage
   | ReadyStateMessage
+  | NameChangeMessage
   | GameConfigMessage
   | MapChangeMessage
   | StartGameMessage
@@ -290,6 +300,17 @@ export class MessageFactory {
       ...this.createBase(MessageType.READY_STATE, senderId),
       type: MessageType.READY_STATE,
       payload: { playerId, isReady }
+    };
+  }
+
+  /**
+   * 이름 변경 메시지 생성
+   */
+  static createNameChange(senderId: string, playerId: string, newName: string): NameChangeMessage {
+    return {
+      ...this.createBase(MessageType.NAME_CHANGE, senderId),
+      type: MessageType.NAME_CHANGE,
+      payload: { playerId, newName }
     };
   }
 
