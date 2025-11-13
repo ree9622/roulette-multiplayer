@@ -134,6 +134,28 @@ div.copyright a {
         flex-grow: 1;
       }
     }
+
+    // 멀티플레이어 모드일 때 특정 요소만 숨김
+    &.mp-mode {
+      h3 {
+        display: none;
+      }
+
+      #in_names {
+        display: none;
+      }
+
+      #mp-create-room-btn,
+      #mp-join-room-btn {
+        display: none;
+      }
+
+      // 섞기/시작 버튼은 유지 (명시적으로 표시)
+      #btnShuffle,
+      #btnStart {
+        display: inline-flex;
+      }
+    }
   }
 
   div.right {

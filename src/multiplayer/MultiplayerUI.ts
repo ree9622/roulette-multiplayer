@@ -584,10 +584,10 @@ export class MultiplayerUI {
    * 구슬 입력란 숨기기 (멀티플레이어 모드용)
    */
   private hideMarbleInput(): void {
-    // 구슬 입력란 섹션 숨기기
+    // 구슬 입력란 섹션에 mp-mode 클래스 추가 (CSS로 선택적 숨김)
     const marbleSection = document.querySelector('.left') as HTMLElement;
     if (marbleSection) {
-      marbleSection.style.display = 'none';
+      marbleSection.classList.add('mp-mode');
     }
 
     // 대신 참가자 안내 메시지 표시
@@ -607,7 +607,7 @@ export class MultiplayerUI {
   private showMarbleInput(): void {
     const marbleSection = document.querySelector('.left') as HTMLElement;
     if (marbleSection) {
-      marbleSection.style.display = 'block';
+      marbleSection.classList.remove('mp-mode');
     }
 
     // 안내 메시지 제거

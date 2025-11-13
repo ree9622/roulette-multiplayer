@@ -3,7 +3,7 @@
  * 브라우저 환경용 로깅 시스템
  *
  * 작성일: 2025-11-13
- * 기능: 콘솔 로그 + localStorage 저장, 로그 레벨 관리, 로그 내보내기
+ * 기능: 콘솔 로그 + localStorage 저장 + Loki 전송, 로그 레벨 관리, 로그 내보내기
  */
 
 export enum LogLevel {
@@ -22,10 +22,28 @@ export interface LogEntry {
   error?: Error;
 }
 
+export interface LokiConfig {
+  host: string;
+  labels: {
+    app: string;
+    service: string;
+    environment: string;
+    [key: string]: string;
+  };
+  batchSize?: number;
+  flushInterval?: number;
+}
+
 export class Logger {
   private static logs: LogEntry[] = [];
   private static maxLogs: number = 1000; // 최대 저장 로그 수
   private static storageKey: string = 'roulette_multiplayer_logs';
+
+  // Loki 설정
+  private static lokiConfig: LokiConfig | null = null;
+  private static lokiEnabled: boolean = false;
+  private static lokiBatch: LogEntry[] = [];
+  private static lokiFlushInterval: number | null = null;
 
   /**
    * DEBUG 레벨 로그
@@ -105,6 +123,9 @@ export class Logger {
 
     // localStorage에 저장 (에러 무시)
     this.saveToStorage();
+
+    // Loki에 전송
+    this.sendToLoki(entry);
 
     // 콘솔에 출력
     this.printToConsole(entry);
@@ -204,9 +225,123 @@ export class Logger {
   static getLogCount(): number {
     return this.logs.length;
   }
+
+  /**
+   * Loki 로깅 초기화
+   * @param config Loki 설정
+   */
+  static initLoki(config: LokiConfig): void {
+    this.lokiConfig = {
+      ...config,
+      batchSize: config.batchSize || 10,
+      flushInterval: config.flushInterval || 5000, // 5초마다 전송
+    };
+    this.lokiEnabled = true;
+
+    console.log('[Logger] Loki 로깅 활성화:', config.host, config.labels);
+
+    // 주기적으로 배치 전송
+    this.lokiFlushInterval = window.setInterval(() => {
+      this.flushLokiBatch();
+    }, this.lokiConfig.flushInterval);
+  }
+
+  /**
+   * Loki에 로그 전송
+   * @param entry 로그 엔트리
+   */
+  private static sendToLoki(entry: LogEntry): void {
+    if (!this.lokiEnabled || !this.lokiConfig) return;
+
+    // 배치에 추가
+    this.lokiBatch.push(entry);
+
+    // 배치 크기 초과 시 즉시 전송
+    if (this.lokiBatch.length >= this.lokiConfig.batchSize!) {
+      this.flushLokiBatch();
+    }
+  }
+
+  /**
+   * Loki 배치 전송
+   */
+  private static flushLokiBatch(): void {
+    if (!this.lokiEnabled || !this.lokiConfig || this.lokiBatch.length === 0) {
+      return;
+    }
+
+    const batch = [...this.lokiBatch];
+    this.lokiBatch = [];
+
+    const streams = [
+      {
+        stream: this.lokiConfig.labels,
+        values: batch.map(entry => [
+          `${entry.timestamp}000000`, // 나노초 단위 (timestamp * 1000000)
+          JSON.stringify({
+            level: entry.level,
+            module: entry.module,
+            message: entry.message,
+            data: entry.data,
+            error: entry.error ? {
+              name: entry.error.name,
+              message: entry.error.message,
+              stack: entry.error.stack,
+            } : undefined,
+          }),
+        ]),
+      },
+    ];
+
+    // Loki Push API 호출
+    fetch(`${this.lokiConfig.host}/loki/api/v1/push`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ streams }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          console.error('[Logger] Loki 전송 실패:', response.status, response.statusText);
+        }
+      })
+      .catch(error => {
+        console.error('[Logger] Loki 전송 에러:', error);
+      });
+  }
+
+  /**
+   * Loki 로깅 비활성화
+   */
+  static disableLoki(): void {
+    if (this.lokiFlushInterval !== null) {
+      clearInterval(this.lokiFlushInterval);
+      this.lokiFlushInterval = null;
+    }
+
+    // 남은 배치 전송
+    this.flushLokiBatch();
+
+    this.lokiEnabled = false;
+    console.log('[Logger] Loki 로깅 비활성화');
+  }
 }
 
 // 페이지 로드 시 저장된 로그 불러오기
 if (typeof window !== 'undefined') {
   Logger.loadFromStorage();
+
+  // Loki 초기화 (https://logs.samlab.co.kr)
+  Logger.initLoki({
+    host: 'https://logs.samlab.co.kr',
+    labels: {
+      app: 'roulette-multiplayer',
+      service: 'multiplayer-game',
+      environment: 'production',
+      hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown',
+    },
+    batchSize: 10,
+    flushInterval: 5000,
+  });
 }
