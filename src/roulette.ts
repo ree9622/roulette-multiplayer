@@ -17,6 +17,7 @@ import { IPhysics } from './IPhysics';
 import { Box2dPhysics } from './physics-box2d';
 import { MouseEventHandlerName, MouseEventName } from './types/mouseEvents.type';
 import { FastForwader } from './fastForwader';
+import { Logger } from './utils/Logger';
 
 export class Roulette extends EventTarget {
   private _marbles: Marble[] = [];
@@ -55,6 +56,7 @@ export class Roulette extends EventTarget {
   private _isReady: boolean = false;
   private fastForwarder!: FastForwader;
   private _randomSeed: number | null = null;
+  private _isMultiplayerGuest: boolean = false; // 멀티플레이어 참가자 여부
 
   get isReady() {
     return this._isReady;
@@ -156,6 +158,13 @@ export class Roulette extends EventTarget {
       if (marble.y > this._stage.goalY) {
         this._winners.push(marble);
         if (this._isRunning && this._winners.length === this._winnerRank + 1) {
+          Logger.info('Roulette', '🏆 우승자 결정', {
+            winner: marble.name,
+            winnerRank: this._winnerRank,
+            winnersCount: this._winners.length,
+            isMultiplayerGuest: this._isMultiplayerGuest,
+          });
+
           this.dispatchEvent(
             new CustomEvent('goal', { detail: { winner: marble.name } }),
           );
@@ -365,6 +374,15 @@ export class Roulette extends EventTarget {
    */
   public setRandomSeed(seed: number | null) {
     this._randomSeed = seed;
+    Logger.info('Roulette', '랜덤 시드 설정', { seed });
+  }
+
+  /**
+   * 멀티플레이어 참가자 모드 설정
+   * @param isGuest true이면 자체 goal 이벤트를 발생시키지 않음
+   */
+  public setMultiplayerGuest(isGuest: boolean) {
+    this._isMultiplayerGuest = isGuest;
   }
 
   /**
@@ -414,10 +432,22 @@ export class Roulette extends EventTarget {
       ? this.createSeededRandom(this._randomSeed)
       : Math.random;
 
+    Logger.info('Roulette', 'setMarbles - 랜덤 함수 설정', {
+      hasRandomSeed: this._randomSeed !== null,
+      randomSeed: this._randomSeed,
+      totalCount,
+    });
+
     const orders = Array(totalCount)
       .fill(0)
       .map((_, i) => i)
       .sort(() => randomFunc() - 0.5);
+
+    Logger.info('Roulette', 'setMarbles - 구슬 순서 생성 완료', {
+      orders: [...orders],
+      randomSeed: this._randomSeed,
+    });
+
     members.forEach((member) => {
       if (member) {
         for (let j = 0; j < member.count; j++) {

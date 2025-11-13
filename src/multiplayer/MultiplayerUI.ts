@@ -105,7 +105,16 @@ export class MultiplayerUI {
   private setupGameSyncEvents(): void {
     // 게임 시작 이벤트 (참가자만 받음)
     this.gameSync.on('gameStart', (config) => {
+      const isHost = this.roomManager.getIsHost();
       console.log('[MultiplayerUI] 게임 시작 신호 수신');
+
+      Logger.info('MultiplayerUI', `게임 시작 이벤트 (${isHost ? '호스트' : '참가자'})`, {
+        isHost,
+        randomSeed: config.randomSeed,
+        marbles: config.marbles,
+        mapIndex: config.mapIndex,
+        winnerRank: config.winnerRank,
+      });
 
       // 게임 설정 적용
       const names: string[] = [];
@@ -118,6 +127,8 @@ export class MultiplayerUI {
           names.push(nameStr);
         }
       });
+
+      Logger.info('MultiplayerUI', '구슬 이름 배열 생성', { names });
 
       // 구슬 설정
       (window as any).roulette.setMarbles(names);
@@ -132,6 +143,7 @@ export class MultiplayerUI {
       // 랜덤 시드 설정 (같은 결과를 위해)
       if (config.randomSeed) {
         (window as any).roulette.setRandomSeed(config.randomSeed);
+        Logger.info('MultiplayerUI', '랜덤 시드 설정 호출', { randomSeed: config.randomSeed });
       }
 
       // 게임 시작

@@ -16,6 +16,7 @@ import {
 } from './protocol';
 import { PeerManager } from './PeerManager';
 import { RoomManager } from './RoomManager';
+import { Logger } from '../utils/Logger';
 
 /**
  * GameSync 이벤트 타입
@@ -104,6 +105,15 @@ export class GameSync {
     const { config, startTime } = message.payload;
     console.log('[GameSync] 게임 시작 신호 수신');
 
+    Logger.info('GameSync', '[참가자] START_GAME 메시지 수신', {
+      randomSeed: config.randomSeed,
+      marbles: config.marbles,
+      mapIndex: config.mapIndex,
+      winnerRank: config.winnerRank,
+      startTime,
+      delay: Math.max(0, startTime - Date.now()),
+    });
+
     // 시작 시간 동기화를 위한 약간의 지연
     const now = Date.now();
     const delay = Math.max(0, startTime - now);
@@ -164,6 +174,14 @@ export class GameSync {
       randomSeed
     };
 
+    Logger.info('GameSync', '[호스트] 게임 시작', {
+      randomSeed,
+      marbles: marbles,
+      marbleConfigs,
+      mapIndex,
+      winnerRank,
+    });
+
     // 게임 설정 업데이트
     this.roomManager.updateGameConfig(gameConfig);
 
@@ -173,6 +191,8 @@ export class GameSync {
       gameConfig
     );
     this.peerManager.broadcast(startMessage);
+
+    Logger.info('GameSync', '[호스트] START_GAME 메시지 브로드캐스트 완료', { randomSeed });
 
     // 약간의 지연 후 호스트도 게임 시작
     setTimeout(() => {
