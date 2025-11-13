@@ -103,13 +103,12 @@ export class MultiplayerUI {
    * GameSync 이벤트 설정
    */
   private setupGameSyncEvents(): void {
-    // 게임 시작 이벤트 (참가자만 받음)
+    // 게임 시작 이벤트 (호스트 + 참가자 모두)
     this.gameSync.on('gameStart', (config) => {
       const isHost = this.roomManager.getIsHost();
       console.log('[MultiplayerUI] 게임 시작 신호 수신');
 
-      Logger.info('MultiplayerUI', `게임 시작 이벤트 (${isHost ? '호스트' : '참가자'})`, {
-        isHost,
+      Logger.info('MultiplayerUI', `[${isHost ? '호스트' : '참가자'}] 게임 시작 이벤트`, {
         randomSeed: config.randomSeed,
         marbles: config.marbles,
         mapIndex: config.mapIndex,
@@ -130,7 +129,13 @@ export class MultiplayerUI {
 
       Logger.info('MultiplayerUI', '구슬 이름 배열 생성', { names });
 
-      // 구슬 설정
+      // ⚠️ 중요: 랜덤 시드를 setMarbles 이전에 설정해야 함!
+      if (config.randomSeed) {
+        (window as any).roulette.setRandomSeed(config.randomSeed);
+        Logger.info('MultiplayerUI', '랜덤 시드 설정 호출 (setMarbles 이전)', { randomSeed: config.randomSeed });
+      }
+
+      // 구슬 설정 (이제 randomSeed가 적용됨)
       (window as any).roulette.setMarbles(names);
 
       // 맵 설정
@@ -139,12 +144,6 @@ export class MultiplayerUI {
       // 당첨 순위 설정
       (window as any).options.winningRank = config.winnerRank;
       (window as any).roulette.setWinningRank(config.winnerRank);
-
-      // 랜덤 시드 설정 (같은 결과를 위해)
-      if (config.randomSeed) {
-        (window as any).roulette.setRandomSeed(config.randomSeed);
-        Logger.info('MultiplayerUI', '랜덤 시드 설정 호출', { randomSeed: config.randomSeed });
-      }
 
       // 게임 시작
       (window as any).roulette.start();
