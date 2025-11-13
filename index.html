@@ -225,7 +225,6 @@
       // 싱글플레이어 모드
       window.roulette.start();
       document.querySelector('#settings').classList.add('hide');
-      document.querySelector('#donate').classList.add('hide');
     });
 
     document.querySelector('#chkAutoRecording').addEventListener('change', (e) => {
@@ -282,7 +281,6 @@
 
       setTimeout(() => {
         document.querySelector('#settings').classList.remove('hide');
-        document.querySelector('#donate').classList.remove('hide');
       }, 3000);
     });
     window.roulette.addEventListener('shakeAvailableChanged', (e) => {
@@ -309,39 +307,6 @@
       window.roulette.setMap(index);
     });
 
-    const checkDonateButtonLoaded = () => {
-      const btn = document.querySelector('span.bmc-btn-text');
-      if (!btn) {
-        setTimeout(checkDonateButtonLoaded, 100);
-      } else {
-        console.log('donation button has been loaded');
-        btn.setAttribute('data-trans', '');
-        window.translateElement(btn);
-      }
-    };
-    setTimeout(checkDonateButtonLoaded, 100);
-
-    const currentNotice = 2;
-    const noticeKey = 'lastViewedNotification';
-
-    const closeNotice = () => {
-      document.querySelector('#notice').style.display = 'none';
-      localStorage.setItem(noticeKey, currentNotice.toString());
-    };
-
-    const openNotice = () => {
-      console.log('openNotice');
-      document.querySelector('#notice').style.display = 'flex';
-    };
-
-    document.querySelector('#closeNotice').addEventListener('click', () => {
-      closeNotice();
-    });
-
-    document.querySelector('#btnNotice').addEventListener('click', () => {
-      openNotice();
-    });
-
     function simpleToast(msg) {
       const toast = document.createElement('div');
       toast.classList.add('toast');
@@ -357,16 +322,6 @@
         document.body.removeChild(toast);
       }, 1200);
     }
-
-    const checkNotice = () => {
-      const lastViewed = localStorage.getItem(noticeKey);
-      console.log('lastViewed', lastViewed);
-      if (lastViewed === null || Number(lastViewed) < currentNotice) {
-        openNotice();
-      }
-    };
-
-    checkNotice();
   }
 </script>
 <div id="settings" class="settings">
@@ -408,10 +363,6 @@
     <h3 data-trans>Enter names below</h3>
     <textarea id="in_names" placeholder="Input names separated by commas or line feed here" data-trans="placeholder">짱구*5, 짱아*10, 봉미선*3</textarea>
     <div class="actions">
-      <button id="btnNotice">
-        <i class="icon megaphone"></i>
-      </button>
-      <div class="sep"></div>
       <button id="mp-create-room-btn" class="mp-btn">
         <span>🏠 방 만들기</span>
       </button>
@@ -429,12 +380,6 @@
       </button>
     </div>
   </div>
-</div>
-<div id="donate">
-  <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
-          data-name="bmc-button" data-slug="lazygyu" data-color="#FFDD00" data-emoji=""
-          data-font="Comic" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000"
-          data-coffee-color="#ffffff"></script>
 </div>
 <div id="inGame" class="settings hide">
   <button id="btnShake" data-trans>Shake!</button>
@@ -465,28 +410,6 @@
     <button id="mp-change-name-btn" class="mp-btn-secondary" style="display: inline-block;">이름 변경</button>
     <button id="mp-ready-btn" class="mp-btn-primary" style="display: none;">준비</button>
     <button id="mp-leave-room-btn" class="mp-btn-secondary" style="display: none;">나가기</button>
-  </div>
-</div>
-
-<div id="notice">
-  <h1>Notice</h1>
-  <div class="notice-body">
-    <p>마블 룰렛 사용자 여러분 안녕하세요. 개발자 lazygyu 입니다.</p>
-    <p>최근 마블 룰렛에 <a href='https://lazygyu.net/blog/stolen-copyright' target='_blank'>저작권 관련한 사건</a>이 발생하여 많은 분들께 우려를
-      끼쳐드렸습니다.</p>
-    <p>이런 사정을 알고 <a href='https://www.youtube.com/@%EA%BD%89%EB%B3%80%ED%98%B8%EC%82%AC' target='_blank'>꽉변호사</a>님께서 법적
-      조치에 도움을 주겠다고 연락을 주셨습니다.</p>
-    <p>법적 절차에 필요한 비용을 모금을 통해 충당할 예정이고, 혹시 사용 후 남은 금액이 있다면 전액 사회적 약자를 위한 공익 소송을 담당하고 있는 <a
-      href='https://www.legalaid.or.kr/' target='_blank'>대한변협법률구조재단</a>에
-      기부됩니다.</p>
-    <p>이 프로그램 뿐 아니라 이러한 저작권 문제로 고통받는 다른 분들께도 좋은 선례가 될 수 있도록 도와주세요!<br />
-    </p>
-    <p>
-      <bold>모금 마감되었습니다. 여러분의 성원에 진심으로 감사드립니다.</bold>
-    </p>
-  </div>
-  <div class="notice-action">
-    <button id="closeNotice" data-trans>Close</button>
   </div>
 </div>
 <div class="copyright">&copy; 2022-2025.<a href="https://lazygyu.net" target="_blank">lazygyu</a> <span data-trans>This program is freeware and may be used freely anywhere, including in broadcasts and videos.</span>

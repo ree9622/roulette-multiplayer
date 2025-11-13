@@ -10,6 +10,7 @@ import { Player } from './protocol';
 import { PeerManager } from './PeerManager';
 import { RoomManager } from './RoomManager';
 import { GameSync } from './GameSync';
+import { Logger } from '../utils/Logger';
 
 /**
  * MultiplayerUI 클래스
@@ -136,7 +137,6 @@ export class MultiplayerUI {
       // 게임 시작
       (window as any).roulette.start();
       document.querySelector('#settings')?.classList.add('hide');
-      document.querySelector('#donate')?.classList.add('hide');
     });
 
     // 게임 종료 이벤트 (참가자만 받음)
@@ -278,12 +278,33 @@ export class MultiplayerUI {
         return;
       }
 
+      Logger.info('MultiplayerUI', '방 참가 시도', { playerName, roomCode });
+
+      // 로딩 UI 표시
+      this.showLoadingUI('방에 연결 중...', '호스트를 찾고 있습니다.');
+
+      // 진행 상황 이벤트 리스너 등록
+      const progressHandler = (message: string) => {
+        this.updateLoadingMessage(message);
+      };
+      this.peerManager.on('connectionProgress', progressHandler);
+
       try {
         await this.roomManager.joinRoom(playerName, roomCode);
+        Logger.info('MultiplayerUI', '방 참가 성공', { roomCode });
+
         this.onRoomJoined(roomCode);
         modal.style.display = 'none';
+
       } catch (error) {
-        alert('방 참가 실패: ' + (error as Error).message);
+        Logger.error('MultiplayerUI', '방 참가 실패', error as Error);
+
+        // 에러 UI 표시
+        this.showErrorUI(
+          '방 참가 실패',
+          (error as Error).message,
+          () => this.showJoinRoomModal() // 재시도
+        );
       }
     });
 
@@ -594,6 +615,89 @@ export class MultiplayerUI {
     if (infoDiv) {
       infoDiv.remove();
     }
+  }
+
+  /**
+   * 로딩 UI 표시
+   * @param title 로딩 제목
+   * @param message 로딩 메시지
+   */
+  private showLoadingUI(title: string, message: string): void {
+    const modal = document.getElementById('mp-modal');
+    const titleEl = document.getElementById('mp-modal-title');
+    const content = document.getElementById('mp-modal-content');
+
+    if (!modal || !titleEl || !content) return;
+
+    titleEl.textContent = title;
+    content.innerHTML = `
+      <div class="mp-loading">
+        <div class="mp-spinner"></div>
+        <p id="mp-loading-message" class="mp-loading-message">${message}</p>
+      </div>
+    `;
+
+    modal.style.display = 'flex';
+  }
+
+  /**
+   * 로딩 메시지 업데이트
+   * @param message 새 메시지
+   */
+  private updateLoadingMessage(message: string): void {
+    const messageEl = document.getElementById('mp-loading-message');
+    if (messageEl) {
+      messageEl.textContent = message;
+      Logger.debug('MultiplayerUI', '로딩 메시지 업데이트', { message });
+    }
+  }
+
+  /**
+   * 에러 UI 표시
+   * @param title 에러 제목
+   * @param message 에러 메시지
+   * @param onRetry 재시도 콜백
+   */
+  private showErrorUI(title: string, message: string, onRetry?: () => void): void {
+    const modal = document.getElementById('mp-modal');
+    const titleEl = document.getElementById('mp-modal-title');
+    const content = document.getElementById('mp-modal-content');
+
+    if (!modal || !titleEl || !content) return;
+
+    titleEl.textContent = title;
+    content.innerHTML = `
+      <div class="mp-error">
+        <p class="mp-error-message">❌ ${message}</p>
+        <div class="mp-error-actions">
+          ${onRetry ? '<button id="mp-retry-btn" class="mp-btn-primary">다시 시도</button>' : ''}
+          <button id="mp-error-close-btn" class="mp-btn-secondary">닫기</button>
+        </div>
+        <div class="mp-error-logs">
+          <button id="mp-download-logs-btn" class="mp-btn-small">로그 다운로드</button>
+        </div>
+      </div>
+    `;
+
+    modal.style.display = 'flex';
+
+    // 재시도 버튼 이벤트
+    if (onRetry) {
+      document.getElementById('mp-retry-btn')?.addEventListener('click', () => {
+        modal.style.display = 'none';
+        onRetry();
+      });
+    }
+
+    // 닫기 버튼 이벤트
+    document.getElementById('mp-error-close-btn')?.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    // 로그 다운로드 버튼 이벤트
+    document.getElementById('mp-download-logs-btn')?.addEventListener('click', () => {
+      Logger.downloadLogs();
+    });
   }
 
   // Getter 메서드들

@@ -8,6 +8,7 @@
 
 import Peer, { DataConnection } from 'peerjs';
 import { Message } from './protocol';
+import { Logger } from '../utils/Logger';
 
 /**
  * Peer 이벤트 타입 정의
@@ -19,6 +20,7 @@ export interface PeerManagerEvents {
   close: (conn: DataConnection) => void;   // 연결 종료
   error: (error: Error) => void;           // 에러 발생
   disconnected: () => void;                // Peer 서버 연결 끊김
+  connectionProgress: (message: string) => void; // 연결 진행 상황
 }
 
 /**
@@ -38,6 +40,8 @@ export class PeerManager {
    * @returns Promise<string> 생성된 Peer ID
    */
   async createPeer(customId?: string): Promise<string> {
+    Logger.info('PeerManager', 'Peer 생성 시작', { customId });
+
     return new Promise((resolve, reject) => {
       try {
         // Peer 인스턴스 생성
@@ -58,6 +62,7 @@ export class PeerManager {
 
         // Peer 생성 완료 이벤트
         this.peer.on('open', (id: string) => {
+          Logger.info('PeerManager', 'Peer 생성 완료', { peerId: id });
           console.log('[PeerManager] Peer 생성 완료:', id);
           this.reconnectAttempts = 0; // 재연결 카운터 초기화
           this.emit('open', id);
@@ -66,6 +71,7 @@ export class PeerManager {
 
         // 새 연결 수신 이벤트 (호스트만)
         this.peer.on('connection', (conn: DataConnection) => {
+          Logger.info('PeerManager', '새 연결 수신', { peerId: conn.peer });
           console.log('[PeerManager] 새 연결 수신:', conn.peer);
           this.handleConnection(conn);
           this.emit('connection', conn);
@@ -73,6 +79,7 @@ export class PeerManager {
 
         // 연결 끊김 이벤트
         this.peer.on('disconnected', () => {
+          Logger.warn('PeerManager', 'Peer 서버 연결 끊김');
           console.warn('[PeerManager] Peer 서버 연결 끊김');
           this.emit('disconnected');
           this.attemptReconnect();
@@ -80,6 +87,7 @@ export class PeerManager {
 
         // 에러 이벤트
         this.peer.on('error', (error: Error) => {
+          Logger.error('PeerManager', 'Peer 에러', error);
           console.error('[PeerManager] Peer 에러:', error);
           this.emit('error', error);
 
@@ -96,14 +104,52 @@ export class PeerManager {
   }
 
   /**
-   * 호스트에 연결 (참가자용)
+   * 호스트에 연결 (참가자용) - 재시도 지원
    * @param hostId 호스트 Peer ID
+   * @param maxRetries 최대 재시도 횟수 (기본: 3회)
    * @returns Promise<DataConnection> 연결 객체
    */
-  async connectToHost(hostId: string): Promise<DataConnection> {
+  async connectToHost(hostId: string, maxRetries: number = 3): Promise<DataConnection> {
+    Logger.info('PeerManager', '호스트 연결 시도 시작', { hostId, maxRetries });
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        Logger.info('PeerManager', `연결 시도 ${attempt}/${maxRetries}`, { hostId });
+        this.emit('connectionProgress', `방에 연결 중... (${attempt}/${maxRetries})`);
+
+        const conn = await this.attemptConnection(hostId, 30000); // 30초 타임아웃
+        Logger.info('PeerManager', '호스트 연결 성공', { hostId, attempt });
+        return conn;
+
+      } catch (error) {
+        Logger.warn('PeerManager', `연결 시도 ${attempt} 실패`, { hostId, error: (error as Error).message });
+
+        if (attempt === maxRetries) {
+          Logger.error('PeerManager', '모든 연결 시도 실패', error as Error);
+          throw error;
+        }
+
+        // 재시도 전 대기 (2초 * 시도 횟수)
+        const delay = 2000 * attempt;
+        Logger.info('PeerManager', `${delay}ms 후 재시도`, { attempt });
+        this.emit('connectionProgress', `재연결 중... (${attempt + 1}/${maxRetries})`);
+        await this.delay(delay);
+      }
+    }
+
+    throw new Error('연결 실패');
+  }
+
+  /**
+   * 단일 연결 시도
+   * @param hostId 호스트 Peer ID
+   * @param timeout 타임아웃 (ms)
+   * @returns Promise<DataConnection> 연결 객체
+   */
+  private attemptConnection(hostId: string, timeout: number): Promise<DataConnection> {
     return new Promise((resolve, reject) => {
       if (!this.peer) {
-        reject(new Error('Peer가 생성되지 않았습니다. createPeer()를 먼저 호출하세요.'));
+        reject(new Error('Peer가 생성되지 않았습니다.'));
         return;
       }
 
@@ -116,6 +162,7 @@ export class PeerManager {
 
         // 연결 성공 이벤트
         conn.on('open', () => {
+          Logger.info('PeerManager', '호스트 연결 수립 완료', { hostId });
           console.log('[PeerManager] 호스트 연결 성공:', hostId);
           this.handleConnection(conn);
           resolve(conn);
@@ -123,21 +170,33 @@ export class PeerManager {
 
         // 연결 실패 이벤트
         conn.on('error', (error: Error) => {
+          Logger.error('PeerManager', '연결 에러', error);
           console.error('[PeerManager] 연결 실패:', error);
           reject(error);
         });
 
-        // 타임아웃 설정 (10초)
+        // 타임아웃 설정
         setTimeout(() => {
           if (!conn.open) {
-            reject(new Error('연결 시간 초과'));
+            const timeoutError = new Error(`연결 시간 초과 (${timeout}ms)`);
+            Logger.warn('PeerManager', '연결 타임아웃', { hostId, timeout });
+            reject(timeoutError);
           }
-        }, 10000);
+        }, timeout);
 
       } catch (error) {
         reject(error);
       }
     });
+  }
+
+  /**
+   * 지연 유틸리티
+   * @param ms 지연 시간 (ms)
+   * @returns Promise<void>
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
