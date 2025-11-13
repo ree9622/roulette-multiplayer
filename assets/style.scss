@@ -451,3 +451,262 @@ div.toast {
   text-decoration: none;
   text-shadow: -2px 0px black, 0px 2px black, 2px 0px black, 0px -2px black;
 }
+
+/* ======================
+   멀티플레이어 스타일
+   ====================== */
+
+/* 멀티플레이어 버튼 */
+.mp-btn {
+  padding: 8px 16px;
+  margin: 0 4px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
+
+  &:hover {
+    background: #45a049;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* 멀티플레이어 모달 */
+.mp-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+
+  .mp-modal-content {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    min-width: 400px;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: #333;
+    }
+  }
+
+  .mp-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-weight: bold;
+      color: #555;
+
+      input {
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+
+        &:focus {
+          outline: none;
+          border-color: #4CAF50;
+        }
+      }
+    }
+
+    .mp-btn-primary, .mp-btn-secondary {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+    }
+
+    .mp-btn-primary {
+      background: #4CAF50;
+      color: white;
+
+      &:hover {
+        background: #45a049;
+      }
+    }
+
+    .mp-btn-secondary {
+      background: #f44336;
+      color: white;
+
+      &:hover {
+        background: #da190b;
+      }
+    }
+  }
+}
+
+/* 멀티플레이어 룸 패널 */
+.mp-room-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  padding: 20px;
+  min-width: 300px;
+  max-width: 350px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+
+  .mp-room-header {
+    margin-bottom: 15px;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 10px;
+
+    h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+      font-size: 18px;
+    }
+
+    .mp-room-code-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+
+      .mp-room-code {
+        font-family: 'Courier New', monospace;
+        font-size: 20px;
+        font-weight: bold;
+        color: #4CAF50;
+        background: #f0f0f0;
+        padding: 5px 10px;
+        border-radius: 5px;
+      }
+
+      .mp-btn-copy {
+        padding: 5px 10px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+
+        &:hover {
+          background: #0b7dda;
+        }
+      }
+    }
+  }
+
+  .mp-player-list-container {
+    margin-bottom: 15px;
+
+    h4 {
+      margin: 0 0 10px 0;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .mp-player-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 10px;
+      background: white;
+
+      .mp-player-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        margin-bottom: 5px;
+        background: #f9f9f9;
+        border-radius: 5px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .mp-player-name {
+          font-weight: 500;
+          color: #333;
+        }
+
+        .mp-player-status {
+          display: flex;
+          align-items: center;
+        }
+
+        .mp-badge-host {
+          margin-right: 5px;
+        }
+
+        .mp-badge-me {
+          margin-left: 5px;
+          color: #2196F3;
+          font-size: 12px;
+          font-weight: bold;
+        }
+
+        .mp-badge-ready {
+          font-size: 12px;
+        }
+
+        .mp-badge-not-ready {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  .mp-room-actions {
+    display: flex;
+    gap: 10px;
+
+    button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+
+      &.mp-btn-primary {
+        background: #4CAF50;
+        color: white;
+
+        &:hover {
+          background: #45a049;
+        }
+      }
+
+      &.mp-btn-secondary {
+        background: #f44336;
+        color: white;
+
+        &:hover {
+          background: #da190b;
+        }
+      }
+    }
+  }
+}

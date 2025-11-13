@@ -169,6 +169,40 @@
         'event_label': 'start',
         'value': window.roulette.getCount(),
       });
+
+      // 멀티플레이어 모드인 경우 GameSync를 통해 시작
+      if (window.multiplayerUI && window.multiplayerUI.getRoomManager().getRoomId()) {
+        const roomManager = window.multiplayerUI.getRoomManager();
+        const gameSync = window.multiplayerUI.getGameSync();
+
+        // 호스트만 게임 시작 가능
+        if (roomManager.getIsHost()) {
+          // 모든 참가자가 준비되었는지 확인
+          if (!roomManager.areAllPlayersReady()) {
+            alert('모든 참가자가 준비될 때까지 기다려주세요.');
+            return;
+          }
+
+          // 게임 설정 수집
+          const names = getNames();
+          const mapIndex = parseInt(document.querySelector('#sltMap').value);
+          const winnerRank = window.options.winningRank;
+
+          console.log('[MultiplayerMode] 게임 시작:', names, mapIndex, winnerRank);
+
+          // GameSync를 통해 게임 시작 (모든 참가자에게 브로드캐스트)
+          // GameSync가 알아서 호스트도 게임을 시작하므로 여기서는 return
+          gameSync.startGame(names, mapIndex, winnerRank);
+
+          // UI 숨기기는 GameSync의 gameStart 이벤트에서 처리됨
+          return;
+        } else {
+          alert('호스트만 게임을 시작할 수 있습니다.');
+          return;
+        }
+      }
+
+      // 싱글플레이어 모드
       window.roulette.start();
       document.querySelector('#settings').classList.add('hide');
       document.querySelector('#donate').classList.add('hide');
@@ -343,11 +377,18 @@
         <i class="icon megaphone"></i>
       </button>
       <div class="sep"></div>
+      <button id="mp-create-room-btn" class="mp-btn">
+        <span>🏠 방 만들기</span>
+      </button>
+      <button id="mp-join-room-btn" class="mp-btn">
+        <span>🚪 방 참가하기</span>
+      </button>
+      <div class="sep"></div>
       <button id="btnShuffle">
         <i class="icon shuffle"></i>
         <span data-trans>Shuffle</span>
       </button>
-      <button id="btnStart">
+      <button id="btnStart" id="start">
         <i class="icon play"></i>
         <span data-trans>Start</span>
       </button>
@@ -363,6 +404,34 @@
 <div id="inGame" class="settings hide">
   <button id="btnShake" data-trans>Shake!</button>
 </div>
+<!-- 멀티플레이어 모달 -->
+<div id="mp-modal" class="mp-modal" style="display: none;">
+  <div class="mp-modal-content">
+    <h2 id="mp-modal-title"></h2>
+    <div id="mp-modal-content"></div>
+  </div>
+</div>
+
+<!-- 멀티플레이어 룸 패널 -->
+<div id="mp-room-panel" class="mp-room-panel" style="display: none;">
+  <div class="mp-room-header">
+    <h3>🎮 멀티플레이어</h3>
+    <div class="mp-room-code-container">
+      <span>방 코드:</span>
+      <span id="mp-room-code-display" class="mp-room-code"></span>
+      <button id="mp-copy-room-code" class="mp-btn-copy">📋 복사</button>
+    </div>
+  </div>
+  <div class="mp-player-list-container">
+    <h4>참가자 목록</h4>
+    <div id="mp-player-list" class="mp-player-list"></div>
+  </div>
+  <div class="mp-room-actions">
+    <button id="mp-ready-btn" class="mp-btn-primary" style="display: none;">준비</button>
+    <button id="mp-leave-room-btn" class="mp-btn-secondary" style="display: none;">나가기</button>
+  </div>
+</div>
+
 <div id="notice">
   <h1>Notice</h1>
   <div class="notice-body">

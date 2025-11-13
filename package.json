@@ -9,6 +9,7 @@
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
+    "gh-pages": "^6.3.0",
     "parcel": "^2.16.1",
     "path-browserify": "^1.0.0",
     "prettier": "^3.3.3",
@@ -21,9 +22,11 @@
   "scripts": {
     "lint": "eslint --fix src/**/*.ts",
     "dev": "parcel index.html --port 1235",
-    "build": "parcel build index.html --public-url /roulette/ && node scripts/build-sw.js"
+    "build": "parcel build index.html --public-url /roulette-multiplayer/ && node scripts/build-sw.js",
+    "deploy": "yarn build && gh-pages -d dist"
   },
   "dependencies": {
-    "box2d-wasm": "^7.0.0"
+    "box2d-wasm": "^7.0.0",
+    "peerjs": "^1.5.5"
   }
 }
