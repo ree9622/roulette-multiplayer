@@ -1286,7 +1286,7 @@ class Roulette extends EventTarget {
         this._stage = (0, _maps.stages)[config.mapIndex];
         this.reset(); // 맵과 물리엔진 초기화
         // 3. 구슬 생성 (이미 초기화된 물리 엔진 사용)
-        this._createMarbles(config.marbleNames);
+        this.setMarbles(config.marbleNames);
         // 4. 당첨 순위 설정
         this._winnerRank = config.winnerRank;
         // 5. 카메라 초기화
