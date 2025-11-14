@@ -72,13 +72,43 @@ export class RouletteRenderer {
     resizing();
   }
 
+  // 2025-11-14: 성능 최적화 - 이미지 로딩 timeout 및 에러 처리 추가
   private async _loadImage(url: string): Promise<HTMLImageElement> {
-    return new Promise((rs) => {
-      const img = new Image();
-      img.addEventListener('load', () => {
-        rs(img);
-      });
-      img.src = url;
+    const TIMEOUT_MS = 10000; // 10초 타임아웃
+
+    return Promise.race([
+      // 실제 이미지 로딩
+      new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+
+        const onLoad = () => {
+          img.removeEventListener('load', onLoad);
+          img.removeEventListener('error', onError);
+          resolve(img);
+        };
+
+        const onError = () => {
+          img.removeEventListener('load', onLoad);
+          img.removeEventListener('error', onError);
+          reject(new Error(`Failed to load image: ${url}`));
+        };
+
+        img.addEventListener('load', onLoad);
+        img.addEventListener('error', onError);
+        img.src = url;
+      }),
+
+      // 타임아웃
+      new Promise<HTMLImageElement>((_, reject) =>
+        setTimeout(() => reject(new Error(`Image load timeout: ${url}`)), TIMEOUT_MS)
+      ),
+    ]).catch((error) => {
+      console.warn('Image load failed, using fallback:', error);
+      // Fallback: 빈 이미지 반환
+      const fallbackImg = new Image();
+      fallbackImg.width = 1;
+      fallbackImg.height = 1;
+      return fallbackImg;
     });
   }
 

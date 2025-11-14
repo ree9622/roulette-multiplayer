@@ -41,7 +41,11 @@ export class GameSync {
 
   private currentGameState: GameState | null = null; // 현재 게임 상태
   private syncInterval: number | null = null; // 상태 동기화 인터벌
-  private syncRate: number = 100;             // 동기화 주기 (ms)
+  // 2025-11-14: 성능 최적화 - 동기화 주기를 100ms에서 200ms로 변경
+  // 기존: 100ms (초당 10회) → 참가자 10명 시 초당 10개 메시지 전송
+  // 개선: 200ms (초당 5회) → 네트워크 트래픽 50% 감소
+  // 물리 엔진이 10ms 단위로 동작하므로 200ms도 충분히 빠름
+  private syncRate: number = 200;             // 동기화 주기 (ms)
 
   constructor(peerManager: PeerManager, roomManager: RoomManager) {
     this.peerManager = peerManager;

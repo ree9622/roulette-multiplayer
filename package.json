@@ -22,7 +22,7 @@
   "scripts": {
     "lint": "eslint --fix src/**/*.ts",
     "dev": "parcel index.html --port 1235",
-    "build": "parcel build index.html --public-url /roulette-multiplayer/ && node scripts/build-sw.js",
+    "build": "parcel build index.html --public-url /roulette-multiplayer/ && node scripts/build-sw.js && node scripts/fix-paths.js",
     "deploy": "yarn build && gh-pages -d dist -r https://github.com/ree9622/roulette-multiplayer.git"
   },
   "dependencies": {
