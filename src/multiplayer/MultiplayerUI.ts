@@ -147,8 +147,15 @@ export class MultiplayerUI {
       // options도 동기화
       (window as any).options.winningRank = config.winnerRank;
 
+      // 2025-11-14: 빨리감기 제어 권한 설정
+      // - 호스트: 제어 가능 (기본값 true 유지)
+      // - 참가자: 제어 불가능 (false로 설정하여 클릭 차단)
+      const roulette = (window as any).roulette;
+      const fastForwarder = roulette.getFastForwarder();
+      fastForwarder.setCanControl(isHost);
+
       // 게임 시작
-      (window as any).roulette.start();
+      roulette.start();
       document.querySelector('#settings')?.classList.add('hide');
     });
 
