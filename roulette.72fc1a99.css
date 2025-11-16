@@ -3,6 +3,7 @@
 }
 
 canvas {
+  z-index: 1;
   width: 100%;
   height: 100%;
   position: fixed;
@@ -259,17 +260,20 @@ div.copyright a {
   text-align: center;
 }
 
-@media screen and (width <= 750px) {
+@media screen and (width <= 768px) {
   #settings {
     opacity: 1;
     visibility: visible;
-    width: calc(100% - 2rem);
+    width: calc(100% - 1rem);
     min-width: 0;
-    max-width: 100%;
+    max-width: none;
+    padding: 18px;
     transition: visibility, opacity 1s linear;
     display: block;
-    bottom: calc(2.5rem + 60px);
-    overflow: hidden;
+    bottom: 3.5rem;
+    left: .5rem;
+    right: .5rem;
+    overflow: visible;
   }
 
   #settings.hide {
@@ -277,23 +281,456 @@ div.copyright a {
     visibility: hidden;
   }
 
+  #settings h3 {
+    margin-bottom: .75rem;
+    font-size: 16pt;
+    font-weight: bold;
+  }
+
+  #settings textarea {
+    border-radius: 8px;
+    min-height: 5rem;
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  #settings button {
+    border-radius: 8px;
+    min-height: 48px;
+    padding: 12px 18px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  #settings button:active {
+    transition: transform .1s;
+    transform: scale(.97);
+  }
+
+  #settings div.left {
+    margin-bottom: 1.5rem;
+  }
+
+  #settings div.left .actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  #settings div.left .actions button {
+    flex: auto;
+    min-width: 120px;
+  }
+
+  #settings div.left .actions .mp-btn {
+    flex: calc(50% - 5px);
+    justify-content: center;
+    align-items: center;
+    min-height: 48px;
+    font-size: 15px;
+    display: flex;
+  }
+
+  #settings div.left .actions .mp-btn span {
+    align-items: center;
+    gap: 6px;
+    display: flex;
+  }
+
+  #settings div.left .actions div.sep {
+    flex-basis: 100%;
+    width: 100%;
+    height: 0;
+  }
+
   #settings div.right div.row {
     border-bottom: 1px solid #555;
     height: auto;
-    padding: .5rem 0;
+    padding: 1rem 0;
     display: block;
+  }
+
+  #settings div.right div.row:last-child {
+    border-bottom: none;
   }
 
   #settings div.right div.row label {
+    align-items: center;
     width: 100%;
-    margin-bottom: .5rem;
+    margin-bottom: .75rem;
     padding-left: 0;
-    display: block;
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
   }
 
   #settings div.right div.row .icon {
-    width: 15px;
-    height: 15px;
+    width: 22px;
+    height: 22px;
+    margin-right: 8px;
+  }
+
+  #settings div.right div.row select {
+    border-radius: 8px;
+    width: 100%;
+    height: 44px;
+    padding: 0 10px;
+    font-size: 16px;
+  }
+
+  #settings div.right div.row .btn-group {
+    width: 100%;
+  }
+
+  #settings input[type="checkbox"]:before {
+    width: 64px;
+    height: 32px;
+  }
+
+  #settings input[type="checkbox"]:after {
+    width: 32px;
+    height: 32px;
+  }
+
+  #settings .btn-group > * {
+    height: 48px;
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  div.copyright {
+    background: #0009;
+    border-radius: 5px 5px 0 0;
+    width: 96%;
+    padding: 8px 5px;
+    font-size: 11px;
+    line-height: 1.4;
+    bottom: 0;
+  }
+
+  .mp-room-panel {
+    min-width: auto;
+    max-width: none;
+    max-height: calc(100vh - 24px);
+    padding: 18px;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    overflow-y: auto;
+  }
+
+  .mp-room-panel .mp-room-header h3 {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .mp-room-panel .mp-room-header .mp-room-code-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .mp-room-panel .mp-room-header .mp-room-code-container .mp-room-code {
+    text-align: center;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 20px;
+  }
+
+  .mp-room-panel .mp-room-header .mp-room-code-container .mp-btn-copy {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .mp-room-panel .mp-player-list-container h4 {
+    font-size: 15px;
+    font-weight: bold;
+  }
+
+  .mp-room-panel .mp-player-list-container .mp-player-list {
+    max-height: 180px;
+  }
+
+  .mp-room-panel .mp-player-list-container .mp-player-list .mp-player-item {
+    margin-bottom: 8px;
+    padding: 12px;
+  }
+
+  .mp-room-panel .mp-player-list-container .mp-player-list .mp-player-item .mp-player-name {
+    font-size: 15px;
+  }
+
+  .mp-room-panel .mp-player-list-container .mp-player-list .mp-player-item .mp-player-status {
+    font-size: 14px;
+  }
+
+  .mp-room-panel .mp-room-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mp-room-panel .mp-room-actions button {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .mp-modal .mp-modal-content {
+    width: calc(100% - 32px);
+    min-width: auto;
+    max-width: none;
+    max-height: calc(100vh - 40px);
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  .mp-modal .mp-modal-content h2 {
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  .mp-modal .mp-modal-form label {
+    font-size: 15px;
+  }
+
+  .mp-modal .mp-modal-form label input {
+    min-height: 48px;
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  .mp-modal .mp-modal-form .mp-btn-primary, .mp-modal .mp-modal-form .mp-btn-secondary {
+    min-height: 48px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  div.toast {
+    text-align: center;
+    width: calc(100% - 24px);
+    padding: 12px 16px;
+    font-size: 15px;
+    bottom: 20px;
+    left: 12px;
+    right: 12px;
+    transform: none;
+  }
+
+  #inGame {
+    bottom: 3.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  #inGame button {
+    border-radius: 12px;
+    min-height: 52px;
+    padding: 14px 28px;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 0 4px 8px #0000004d;
+  }
+
+  #inGame button:active {
+    transform: scale(.95);
+    box-shadow: 0 2px 4px #0000004d;
+  }
+}
+
+@media screen and (width <= 375px) {
+  #settings {
+    padding: 14px;
+    bottom: 3rem;
+  }
+
+  #settings h3 {
+    margin-bottom: .5rem;
+    font-size: 14pt;
+  }
+
+  #settings textarea {
+    min-height: 4rem;
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  #settings button {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+
+  #settings div.left {
+    margin-bottom: 1rem;
+  }
+
+  #settings div.left .actions {
+    gap: 8px;
+  }
+
+  #settings div.left .actions .mp-btn {
+    font-size: 14px;
+  }
+
+  #settings div.right div.row {
+    padding: .75rem 0;
+  }
+
+  #settings div.right div.row label {
+    margin-bottom: .5rem;
+    font-size: 14px;
+  }
+
+  #settings div.right div.row .icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  #settings .btn-group > * {
+    font-size: 14px;
+  }
+
+  div.copyright {
+    padding: 6px 4px;
+    font-size: 10px;
+  }
+
+  .mp-room-panel {
+    padding: 14px;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .mp-room-panel .mp-room-header h3 {
+    font-size: 16px;
+  }
+
+  .mp-room-panel .mp-room-header .mp-room-code {
+    font-size: 18px;
+  }
+
+  .mp-room-panel .mp-room-header .mp-btn-copy {
+    font-size: 14px;
+  }
+
+  .mp-room-panel .mp-player-list {
+    max-height: 140px;
+  }
+
+  .mp-modal .mp-modal-content {
+    padding: 18px;
+  }
+
+  .mp-modal .mp-modal-content h2 {
+    font-size: 18px;
+  }
+
+  #inGame {
+    bottom: 3rem;
+  }
+
+  #inGame button {
+    min-height: 48px;
+    padding: 12px 24px;
+    font-size: 18px;
+  }
+}
+
+@media screen and (height <= 500px) and (orientation: landscape) {
+  #settings {
+    max-height: calc(100vh - 1rem);
+    padding: 12px;
+    bottom: .5rem;
+    left: .5rem;
+    right: .5rem;
+    overflow-y: auto;
+  }
+
+  #settings h3 {
+    margin-bottom: .4rem;
+    font-size: 13pt;
+  }
+
+  #settings textarea {
+    min-height: 3rem;
+    padding: 8px;
+    font-size: 15px;
+  }
+
+  #settings button {
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  #settings div.left {
+    margin-bottom: .75rem;
+  }
+
+  #settings div.left .actions {
+    gap: 6px;
+  }
+
+  #settings div.right div.row {
+    padding: .5rem 0;
+  }
+
+  #settings div.right div.row label {
+    margin-bottom: .4rem;
+    font-size: 13px;
+  }
+
+  #settings .btn-group > * {
+    height: 40px;
+    font-size: 13px;
+  }
+
+  div.copyright {
+    padding: 4px;
+    font-size: 9px;
+  }
+
+  .mp-room-panel {
+    max-width: 320px;
+    max-height: calc(100vh - 16px);
+    padding: 12px;
+    top: 8px;
+    left: auto;
+    right: 8px;
+    overflow-y: auto;
+  }
+
+  .mp-room-panel .mp-room-header h3 {
+    font-size: 15px;
+  }
+
+  .mp-room-panel .mp-room-header .mp-room-code {
+    font-size: 16px;
+  }
+
+  .mp-room-panel .mp-player-list-container .mp-player-list {
+    max-height: 120px;
+  }
+
+  .mp-room-panel .mp-room-actions button {
+    min-height: 40px;
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  #inGame {
+    bottom: .5rem;
+  }
+
+  #inGame button {
+    min-height: 44px;
+    padding: 10px 20px;
+    font-size: 16px;
   }
 }
 

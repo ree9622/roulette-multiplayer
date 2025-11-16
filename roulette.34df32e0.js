@@ -11462,6 +11462,9 @@ module.exports = import("./Box2D.a070c79d.js").then(()=>module.bundle.root('66ig
 },{"66ig1":"66ig1"}],"bTlP4":[function(require,module,exports,__globalThis) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
+// 2025-11-14: 멀티플레이어 빨리감기 동기화 수정
+// - 호스트만 빨리감기 버튼을 사용할 수 있도록 제한
+// - 참가자가 클릭해도 무시되도록 수정
 parcelHelpers.export(exports, "FastForwader", ()=>FastForwader);
 class FastForwader {
     constructor(){
@@ -11471,6 +11474,8 @@ class FastForwader {
             w: 0,
             h: 0
         };
+        this.canControl = true // 빨리감기 제어 가능 여부 (멀티플레이어 참가자는 false)
+        ;
         this.isEnabled = false;
         this.icon = new Image();
         this.icon.src = new URL(require("ed6eacbba593253f")).toString();
@@ -11479,7 +11484,15 @@ class FastForwader {
         return this.isEnabled ? 2 : 1;
     }
     /**
-   * 빨리감기 활성화/비활성화 (외부 제어용)
+   * 빨리감기 제어 가능 여부 설정 (멀티플레이어용)
+   * @param canControl true면 제어 가능, false면 제어 불가 (참가자)
+   */ setCanControl(canControl) {
+        this.canControl = canControl;
+        // 제어 불가능하면 빨리감기도 비활성화
+        if (!canControl) this.isEnabled = false;
+    }
+    /**
+   * 빨리감기 활성화/비활성화 (외부 제어용 - 멀티플레이어 동기화)
    * @param enabled 활성화 여부
    */ setEnabled(enabled) {
         this.isEnabled = enabled;
@@ -11509,9 +11522,16 @@ class FastForwader {
         return this.bound;
     }
     onMouseDown(e) {
+        // 제어 불가능하면 무시 (멀티플레이어 참가자)
+        if (!this.canControl) {
+            console.log("[FastForwarder] \uBE68\uB9AC\uAC10\uAE30\uB294 \uD638\uC2A4\uD2B8\uB9CC \uC0AC\uC6A9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.");
+            return;
+        }
         this.isEnabled = true;
     }
     onMouseUp(e) {
+        // 제어 불가능하면 무시 (멀티플레이어 참가자)
+        if (!this.canControl) return;
         this.isEnabled = false;
     }
 }
@@ -11924,8 +11944,14 @@ class MultiplayerUI {
             });
             // options도 동기화
             window.options.winningRank = config.winnerRank;
+            // 2025-11-14: 빨리감기 제어 권한 설정
+            // - 호스트: 제어 가능 (기본값 true 유지)
+            // - 참가자: 제어 불가능 (false로 설정하여 클릭 차단)
+            const roulette = window.roulette;
+            const fastForwarder = roulette.getFastForwarder();
+            fastForwarder.setCanControl(isHost);
             // 게임 시작
-            window.roulette.start();
+            roulette.start();
             document.querySelector('#settings')?.classList.add('hide');
         });
         // 게임 종료 이벤트 (참가자만 받음)
